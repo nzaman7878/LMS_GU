@@ -135,4 +135,71 @@ const addLecture = async (req, res) => {
 };
 
 
-export { createCourse, addLecture  };
+
+const addResource = async (req, res) => {
+  try {
+    const { courseId, moduleId } = req.params;
+    const { title } = req.body;
+
+    const teacherId = req.teacherId;
+
+    
+    const course = await courseModel.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+  
+    if (course.teacher.toString() !== teacherId) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      resource_type: "auto", 
+    });
+
+    const fileUrl = result.secure_url;
+
+    
+    const module = course.modules.id(moduleId);
+
+    if (!module) {
+      return res.status(404).json({
+        success: false,
+        message: "Module not found",
+      });
+    }
+
+    
+    module.resources.push({
+      title,
+      fileUrl,
+    });
+
+    await course.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Resource added successfully",
+      data: module.resources,
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+
+export { createCourse, addLecture , addResource };

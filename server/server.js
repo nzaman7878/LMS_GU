@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import teacherRoute from "./routes/teacherRoute.js";
 import adminRoute from "./routes/adminRoute.js";
+import courseRoute from "./routes/courseRoute.js";
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 
 app.use("/api/admin", adminRoute);
 app.use("/api/teacher", teacherRoute);
+app.use("/api/course", courseRoute);
 
 
 

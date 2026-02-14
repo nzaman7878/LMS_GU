@@ -2,9 +2,10 @@ import jwt from "jsonwebtoken";
 
 const authTeacher = async (req, res, next) => {
   try {
-    const { ttoken } = req.headers;
+    const { ttoken } = req.headers; 
 
-   
+    
+
     if (!ttoken) {
       return res.status(401).json({
         success: false,
@@ -12,17 +13,12 @@ const authTeacher = async (req, res, next) => {
       });
     }
 
-    
     const decoded = jwt.verify(ttoken, process.env.JWT_SECRET);
 
-   
     req.teacherId = decoded.id;
-
     next();
 
   } catch (error) {
-    console.log(error);
-
     if (error.message === "jwt expired") {
       return res.status(401).json({
         success: false,
@@ -30,7 +26,7 @@ const authTeacher = async (req, res, next) => {
       });
     }
 
-    res.status(401).json({
+    return res.status(401).json({
       success: false,
       message: "Invalid token",
     });

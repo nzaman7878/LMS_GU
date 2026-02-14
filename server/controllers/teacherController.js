@@ -27,7 +27,7 @@ const teacherLogin = async (req, res) => {
     }
 
     
-    const token = jwt.sign(
+    const tToken = jwt.sign(
       { id: teacher._id },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
@@ -37,7 +37,7 @@ const teacherLogin = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Login successful",
-      token,
+      tToken,
       teacher: {
         id: teacher._id,
         name: teacher.name,
@@ -59,5 +59,8 @@ const teacherLogin = async (req, res) => {
     });
   }
 };
+
+
+
 
 export { teacherLogin };

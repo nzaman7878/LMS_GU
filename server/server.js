@@ -4,6 +4,7 @@ import connectDB from "./config/db.js";
 import teacherRoute from "./routes/teacherRoute.js";
 import adminRoute from "./routes/adminRoute.js";
 import courseRoute from "./routes/courseRoute.js";
+import connectCloudinary from "./config/cloudinary.js"
 
 dotenv.config();
 
@@ -11,6 +12,8 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 connectDB();
+connectCloudinary();
+
 
 
 app.use(express.json());

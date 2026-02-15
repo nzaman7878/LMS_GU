@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 
-export const registerStudent = async (req, res) => {
+const registerStudent = async (req, res) => {
   try {
     const { name, email, password, image } = req.body;
 
@@ -26,7 +26,7 @@ export const registerStudent = async (req, res) => {
       image,
     });
 
-    // Generate token
+    
     const token = jwt.sign(
       { id: student._id },
       process.env.JWT_SECRET,
@@ -46,3 +46,45 @@ export const registerStudent = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+const loginStudent = async (req, res) => {
+
+  try {
+    const { email, password } = req.body;
+
+    const student = await studentModel.findOne({ email });
+
+    if (!student) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    
+    const isMatch = await bcrypt.compare(password, student.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+  
+    const token = jwt.sign(
+      { id: student._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      student: {
+        id: student._id,
+        name: student.name,
+        email: student.email,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export { registerStudent, loginStudent };

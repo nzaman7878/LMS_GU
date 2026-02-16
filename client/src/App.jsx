@@ -1,5 +1,6 @@
 import './App.css'
 import { Routes, Route } from 'react-router-dom'
+
 import Home from './page/student/Home'
 import CourseList from './page/student/CourseList'
 import CourseDetails from './page/student/CourseDetails'
@@ -7,21 +8,48 @@ import MyEnrollments from './page/student/MyEnrollments'
 import Player from './page/student/Player'
 import Loading from './components/students/Loading'
 
+import Teacher from './page/teacher/Teacher'
+import TeacherDashboard from './page/teacher/TeacherDashboard'
+import AddCourse from './page/teacher/AddCourse'
+import MyCourses from './page/teacher/MyCourses'
+import StudentsEnrolled from './page/teacher/StudentsEnrolled'
+
+import Admin from './page/admin/Admin'
+import AdminDashboard from './page/admin/AdminDashboard'
+import ManageCourses from './page/admin/ManageCourses'
+import ManageStudents from './page/admin/ManageStudents'
+import ManageTeachers from './page/admin/ManageTeachers'
+
 function App() {
 
   return (
     <Routes>
 
+      
       <Route path='/' element={<Home />} />
-
       <Route path='/courses' element={<CourseList />} />
       <Route path='/courses/:id' element={<CourseDetails />} />
-
       <Route path='/my-enrollments' element={<MyEnrollments />} />
       <Route path='/player/:courseId' element={<Player />} />
-
       <Route path='/loading' element={<Loading />} />
 
+      
+      <Route path='/teacher' element={<Teacher />} >
+        <Route index element={<TeacherDashboard />} />
+        <Route path='add-course' element={<AddCourse />} />
+        <Route path='my-courses' element={<MyCourses />} />
+        <Route path='student-enrolled' element={<StudentsEnrolled />} />
+      </Route>
+
+     
+      <Route path='/admin' element={<Admin />} >
+        <Route index element={<AdminDashboard />} />
+        <Route path='manage-courses' element={<ManageCourses />} />
+        <Route path='manage-students' element={<ManageStudents />} />
+        <Route path='manage-teachers' element={<ManageTeachers />} />
+      </Route>
+
+      {/* 404 */}
       <Route path='*' element={<h1>404 Not Found</h1>} />
 
     </Routes>

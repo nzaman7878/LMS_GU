@@ -1,5 +1,5 @@
 import './App.css'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useMatch } from 'react-router-dom'
 
 import Home from './page/student/Home'
 import CourseList from './page/student/CourseList'
@@ -19,11 +19,18 @@ import AdminDashboard from './page/admin/AdminDashboard'
 import ManageCourses from './page/admin/ManageCourses'
 import ManageStudents from './page/admin/ManageStudents'
 import ManageTeachers from './page/admin/ManageTeachers'
+import Navbar from './components/students/Navbar'
 
 function App() {
 
+  const isTeacherRoute = useMatch('/teacher/*');
+
   return (
-    <Routes>
+    <div className="text-default min-h-screen bg-white">
+
+     {!isTeacherRoute && <Navbar />}
+
+      <Routes>
 
       
       <Route path='/' element={<Home />} />
@@ -53,6 +60,7 @@ function App() {
       <Route path='*' element={<h1>404 Not Found</h1>} />
 
     </Routes>
+    </div>
   )
 }
 

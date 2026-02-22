@@ -20,11 +20,14 @@ import ManageCourses from './page/admin/ManageCourses'
 import ManageStudents from './page/admin/ManageStudents'
 import ManageTeachers from './page/admin/ManageTeachers'
 import Navbar from './components/students/Navbar'
+import StudentLogin from './page/student/StudentLogin'
+import StudentDashboard from './page/student/StudentDashboard'
+import { useLocation } from 'react-router-dom';
 
 function App() {
 
-  const isTeacherRoute = useMatch('/teacher/*');
-
+const location = useLocation();
+const isTeacherRoute = location.pathname.startsWith('/teacher');
   return (
     <div className="text-default min-h-screen bg-white">
 
@@ -34,6 +37,8 @@ function App() {
 
       
       <Route path='/' element={<Home />} />
+      <Route path='/student/login' element={<StudentLogin />} />
+      <Route path='/student/dashboard' element={<StudentDashboard />} />
       <Route path='/courses' element={<CourseList />} />
       <Route path='/courses/:id' element={<CourseDetails />} />
       <Route path='/my-enrollments' element={<MyEnrollments />} />

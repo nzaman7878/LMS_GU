@@ -1,7 +1,7 @@
 import './App.css'
 import { Routes, Route, useMatch } from 'react-router-dom'
 
-import Home from './page/student/Home'
+import Home from './components/students/Hero'
 import CourseList from './page/student/CourseList'
 import CourseDetails from './page/student/CourseDetails'
 import MyEnrollments from './page/student/MyEnrollments'

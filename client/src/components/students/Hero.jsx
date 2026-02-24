@@ -1,4 +1,5 @@
 import { assets } from "../../assets/assets";
+import SearchBar from "./SearchBar";
 
 const Hero = () => {
   return (
@@ -35,16 +36,8 @@ const Hero = () => {
       </p>
 
     
-      <div className="flex gap-4 pt-4 flex-wrap justify-center">
-        <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300">
-          Access Courses
-        </button>
 
-        <button className="border border-blue-600 text-blue-600 px-6 py-3 rounded-lg hover:bg-blue-50 transition duration-300">
-          Explore Courses
-        </button>
-      </div>
-
+    <SearchBar />
     </div>
   );
 };

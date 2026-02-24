@@ -39,7 +39,7 @@ const isTeacherRoute = location.pathname.startsWith('/teacher');
       <Route path='/' element={<Home />} />
       <Route path='/student/login' element={<StudentLogin />} />
       <Route path='/student/dashboard' element={<StudentDashboard />} />
-      <Route path='/courses' element={<CourseList />} />
+      <Route path='/course-list/:searchTerm' element={<CourseList />} />
       <Route path='/courses/:id' element={<CourseDetails />} />
       <Route path='/my-enrollments' element={<MyEnrollments />} />
       <Route path='/player/:courseId' element={<Player />} />

@@ -1,7 +1,7 @@
 import './App.css'
-import { Routes, Route, useMatch } from 'react-router-dom'
+import { Routes, Route} from 'react-router-dom'
 
-import Home from './components/students/Hero'
+import Home from './page/student/Home'
 import CourseList from './page/student/CourseList'
 import CourseDetails from './page/student/CourseDetails'
 import MyEnrollments from './page/student/MyEnrollments'
@@ -39,6 +39,7 @@ const isTeacherRoute = location.pathname.startsWith('/teacher');
       <Route path='/' element={<Home />} />
       <Route path='/student/login' element={<StudentLogin />} />
       <Route path='/student/dashboard' element={<StudentDashboard />} />
+      <Route path='/course-list' element={<CourseList />} />
       <Route path='/course-list/:searchTerm' element={<CourseList />} />
       <Route path='/courses/:id' element={<CourseDetails />} />
       <Route path='/my-enrollments' element={<MyEnrollments />} />

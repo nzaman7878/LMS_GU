@@ -1,48 +1,82 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
+import { dummyCourses } from "../assets/assets";
 
 export const AppContext = createContext();
 
 export const AppContextProvider = ({ children }) => {
 
+  const currency = import.meta.env.VITE_CURRENCY || "$";
+
+  const backendUrl = "http://localhost:3000/api";
+
+  const [allcourses, setAllCourses] = useState([]);
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const backendUrl = "http://localhost:3000/api"; 
+  
+  const fetchAllCourses = async () => {
+    setAllCourses(dummyCourses);
+  };
+
+  useEffect(() => {
+    fetchAllCourses();
+  }, []);
 
   
   useEffect(() => {
     const token = localStorage.getItem("studentToken");
+
     if (token) {
-      setStudent({ token });
+      fetchStudentProfile(token);
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
- const loginStudent = async (email, password) => {
-  try {
-    const { data } = await axios.post(
-      `${backendUrl}/students/login`,
-      { email, password }
-    );
 
-    if (data.token) {  
-      localStorage.setItem("studentToken", data.token);
+  const fetchStudentProfile = async (token) => {
+    try {
+      const { data } = await axios.get(
+        `${backendUrl}/students/profile`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
       setStudent(data.student);
-      return { success: true };
+    } catch (error) {
+      localStorage.removeItem("studentToken");
+      setStudent(null);
     }
+    setLoading(false);
+  };
 
-    return { success: false, message: data.message };
 
-  } catch (error) {
-    return {
-      success: false,
-      message: error.response?.data?.message || "Login failed",
-    };
-  }
-};
+  const loginStudent = async (email, password) => {
+    try {
+      const { data } = await axios.post(
+        `${backendUrl}/students/login`,
+        { email, password }
+      );
 
- 
+      if (data.token) {
+        localStorage.setItem("studentToken", data.token);
+        await fetchStudentProfile(data.token);
+        return { success: true };
+      }
+
+      return { success: false, message: data.message };
+
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Login failed",
+      };
+    }
+  };
+
+
   const logoutStudent = () => {
     localStorage.removeItem("studentToken");
     setStudent(null);
@@ -53,6 +87,8 @@ export const AppContextProvider = ({ children }) => {
     loading,
     loginStudent,
     logoutStudent,
+    currency,
+    allcourses,
   };
 
   return (
@@ -61,6 +97,5 @@ export const AppContextProvider = ({ children }) => {
     </AppContext.Provider>
   );
 };
-
 
 export const useAppContext = () => useContext(AppContext);

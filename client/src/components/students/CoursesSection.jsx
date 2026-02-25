@@ -1,7 +1,13 @@
 
 import { Link } from 'react-router-dom'
+import { useContext } from 'react'
+import { AppContext } from '../../context/AppContext'
+import CourseCard from './CourseCard'
 
 const CoursesSection = () => {
+
+  const {allcourses} = useContext(AppContext)
+
   return (
     <div className="py-16 md:px-40 px-8 text-center">
 
@@ -15,6 +21,9 @@ const CoursesSection = () => {
         are crafted to deliver real results.
       </p>
 
+      <div>
+        {allcourses.slice(0, 4).map((course,index) => <CourseCard key={index} course={course} /> )}
+      </div>
       <div className="mt-6">
         <Link
           onClick={() => window.scrollTo(0, 0)}

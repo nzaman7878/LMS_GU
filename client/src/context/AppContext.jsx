@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { dummyCourses } from "../assets/assets";
+import { useNavigate } from "react-router-dom";
 
 export const AppContext = createContext();
 
@@ -10,6 +11,7 @@ export const AppContextProvider = ({ children }) => {
 
   const backendUrl = "http://localhost:3000/api";
 
+  const navigate = useNavigate();
   const [allcourses, setAllCourses] = useState([]);
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,6 +21,18 @@ export const AppContextProvider = ({ children }) => {
     setAllCourses(dummyCourses);
   };
 
+const calculateRating = (course) => {
+  if (!course.courseRatings || course.courseRatings.length === 0)
+    return 0;
+
+  let totalRating = 0;
+
+  course.courseRatings.forEach((rating) => {
+    totalRating += rating.rating;
+  });
+
+  return totalRating / course.courseRatings.length;
+};
   useEffect(() => {
     fetchAllCourses();
   }, []);
@@ -89,6 +103,8 @@ export const AppContextProvider = ({ children }) => {
     logoutStudent,
     currency,
     allcourses,
+    navigate,
+    calculateRating,
   };
 
   return (

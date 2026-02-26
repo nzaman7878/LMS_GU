@@ -1,10 +1,12 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { assets } from '../../assets/assets'
+import { useContext } from 'react'
+import { AppContext } from '../../context/AppContext'
 
 const Navbar = () => {
 
   const location = useLocation()
-  const navigate = useNavigate()
+  const {navigate} = useContext(AppContext)
 
   const isCourseListPage = location.pathname === '/courses'
 
@@ -38,7 +40,7 @@ const Navbar = () => {
             My Enrollments
           </Link>
 
-          {/* ✅ FIXED */}
+          
           <button
             onClick={() => navigate('/student/login')}
             className="bg-blue-600 hover:bg-blue-700 transition text-white px-5 py-2 rounded-full"

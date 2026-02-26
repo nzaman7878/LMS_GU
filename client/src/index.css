@@ -18,16 +18,17 @@
   --leading-course-small: 36px;
   --leading-home-large: 56px;
 
+  
 }
 
-/* ============================= */
-/* Utilities */
+
 
 @utility text-course-details-heading-small {
   font-size: var(--font-size-course-details-heading-small);
   line-height: var(--leading-course-small);
   font-weight: 600;
 }
+
 
 @utility text-course-details-heading-large {
   font-size: var(--font-size-course-details-heading-large);
@@ -48,4 +49,8 @@
 @utility text-default {
   font-size: var(--font-size-default);
   line-height: 24px;
+}
+
+@utility grid-cols-auto {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 }

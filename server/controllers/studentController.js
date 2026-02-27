@@ -35,6 +35,7 @@ const registerStudent = async (req, res) => {
 
     res.status(201).json({
       message: "Student registered successfully",
+      success: true,
       token,
       student: {
         id: student._id,
@@ -75,6 +76,7 @@ const loginStudent = async (req, res) => {
 
     res.status(200).json({
       message: "Login successful",
+      success: true,
       token,
       student: {
         id: student._id,

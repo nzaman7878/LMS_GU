@@ -2,6 +2,7 @@ import './App.css'
 import { Routes, Route} from 'react-router-dom'
 
 import Home from './page/student/Home'
+
 import CourseList from './page/student/CourseList'
 import CourseDetails from './page/student/CourseDetails'
 import MyEnrollments from './page/student/MyEnrollments'
@@ -62,7 +63,7 @@ const isTeacherRoute = location.pathname.startsWith('/teacher');
         <Route path='manage-teachers' element={<ManageTeachers />} />
       </Route>
 
-      {/* 404 */}
+   
       <Route path='*' element={<h1>404 Not Found</h1>} />
 
     </Routes>

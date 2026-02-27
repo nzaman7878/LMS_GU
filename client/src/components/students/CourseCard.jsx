@@ -18,7 +18,7 @@ const CourseCard = ({ course }) => {
       className="bg-white border border-gray-200 rounded-xl overflow-hidden 
                  shadow-sm hover:shadow-lg transition duration-300"
     >
-      {/* Thumbnail */}
+     
       <div className="aspect-video overflow-hidden">
         <img
           className="w-full h-full object-cover hover:scale-105 transition duration-300"
@@ -27,7 +27,7 @@ const CourseCard = ({ course }) => {
         />
       </div>
 
-      {/* Content */}
+      
       <div className="p-4 text-left space-y-2">
 
         <h3 className="text-lg font-semibold text-gray-800 line-clamp-2">
@@ -38,7 +38,7 @@ const CourseCard = ({ course }) => {
           {course.educator?.name}
         </p>
 
-        {/* Rating */}
+        
         <div className="flex items-center space-x-2">
           <p className="text-sm font-medium">{calculateRating(course)}</p>
 
@@ -56,7 +56,7 @@ const CourseCard = ({ course }) => {
           <p className="text-sm text-gray-500">{course.courseRatings?.length || 0} reviews</p>
         </div>
 
-        {/* Price */}
+        
         <div className="flex items-center space-x-2 pt-1">
           <p className="text-lg font-bold text-gray-900">
             {currency}{discountedPrice}

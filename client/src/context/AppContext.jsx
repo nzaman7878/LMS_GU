@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 export const AppContext = createContext();
 
 export const AppContextProvider = ({ children }) => {
-
   const currency = import.meta.env.VITE_CURRENCY || "$";
 
   const backendUrl = "http://localhost:3000/api";
@@ -16,28 +15,25 @@ export const AppContextProvider = ({ children }) => {
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  
   const fetchAllCourses = async () => {
     setAllCourses(dummyCourses);
   };
 
-const calculateRating = (course) => {
-  if (!course.courseRatings || course.courseRatings.length === 0)
-    return 0;
+  const calculateRating = (course) => {
+    if (!course.courseRatings || course.courseRatings.length === 0) return 0;
 
-  let totalRating = 0;
+    let totalRating = 0;
 
-  course.courseRatings.forEach((rating) => {
-    totalRating += rating.rating;
-  });
+    course.courseRatings.forEach((rating) => {
+      totalRating += rating.rating;
+    });
 
-  return totalRating / course.courseRatings.length;
-};
+    return totalRating / course.courseRatings.length;
+  };
   useEffect(() => {
     fetchAllCourses();
   }, []);
 
-  
   useEffect(() => {
     const token = localStorage.getItem("studentToken");
 
@@ -48,15 +44,11 @@ const calculateRating = (course) => {
     }
   }, []);
 
-
   const fetchStudentProfile = async (token) => {
     try {
-      const { data } = await axios.get(
-        `${backendUrl}/students/profile`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const { data } = await axios.get(`${backendUrl}/students/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       setStudent(data.student);
     } catch (error) {
@@ -66,22 +58,41 @@ const calculateRating = (course) => {
     setLoading(false);
   };
 
+  const registerStudent = async (name, email, password) => {
+    try {
+      const { data } = await axios.post(`${backendUrl}/students/register`, {
+        name,
+        email,
+        password,
+      });
+
+      if (data.success) {
+        return { success: true };
+      }
+
+      return { success: false, message: data.message };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Registration failed",
+      };
+    }
+  };
 
   const loginStudent = async (email, password) => {
     try {
-      const { data } = await axios.post(
-        `${backendUrl}/students/login`,
-        { email, password }
-      );
+      const { data } = await axios.post(`${backendUrl}/students/login`, {
+        email,
+        password,
+      });
 
-      if (data.token) {
+      if (data.success && data.token) {
         localStorage.setItem("studentToken", data.token);
         await fetchStudentProfile(data.token);
         return { success: true };
       }
 
       return { success: false, message: data.message };
-
     } catch (error) {
       return {
         success: false,
@@ -90,7 +101,6 @@ const calculateRating = (course) => {
     }
   };
 
-
   const logoutStudent = () => {
     localStorage.removeItem("studentToken");
     setStudent(null);
@@ -98,6 +108,7 @@ const calculateRating = (course) => {
 
   const value = {
     student,
+    registerStudent,
     loading,
     loginStudent,
     logoutStudent,
@@ -107,11 +118,7 @@ const calculateRating = (course) => {
     calculateRating,
   };
 
-  return (
-    <AppContext.Provider value={value}>
-      {children}
-    </AppContext.Provider>
-  );
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
 export const useAppContext = () => useContext(AppContext);

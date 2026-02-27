@@ -106,6 +106,29 @@ export const AppContextProvider = ({ children }) => {
     setStudent(null);
   };
 
+const loginTeacher = async (email, password) => {
+  try {
+    const { data } = await axios.post(
+      `${backendUrl}/teacher/login`,
+      { email, password }
+    );
+
+    if (data.success && data.tToken) {
+      localStorage.setItem("teacherToken", data.tToken);
+      localStorage.setItem("teacherData", JSON.stringify(data.teacher));
+      return { success: true };
+    }
+
+    return { success: false, message: data.message };
+
+  } catch (error) {
+    return {
+      success: false,
+      message: error.response?.data?.message || "Login failed",
+    };
+  }
+};
+
   const value = {
     student,
     registerStudent,
@@ -116,6 +139,7 @@ export const AppContextProvider = ({ children }) => {
     allcourses,
     navigate,
     calculateRating,
+    loginTeacher,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

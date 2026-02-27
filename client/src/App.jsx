@@ -48,12 +48,12 @@ const isTeacherRoute = location.pathname.startsWith('/teacher');
       <Route path='/loading' element={<Loading />} />
 
       
-      <Route path='/teacher' element={<Teacher />} >
-        <Route index element={<TeacherDashboard />} />
-        <Route path='add-course' element={<AddCourse />} />
-        <Route path='my-courses' element={<MyCourses />} />
-        <Route path='student-enrolled' element={<StudentsEnrolled />} />
-      </Route>
+     <Route path='/teacher' element={<Teacher />} >
+  <Route path='dashboard' element={<TeacherDashboard />} />
+  <Route path='add-course' element={<AddCourse />} />
+  <Route path='my-courses' element={<MyCourses />} />
+  <Route path='student-enrolled' element={<StudentsEnrolled />} />
+    </Route>
 
      
       <Route path='/admin' element={<Admin />} >

@@ -3,7 +3,7 @@ import { teacherLogin  } from "../controllers/teacherController.js";
 
 const teacherRouter = express.Router() 
 
-teacherRouter.get("/login", teacherLogin);
+teacherRouter.post("/login", teacherLogin);
 
 
 export default teacherRouter;

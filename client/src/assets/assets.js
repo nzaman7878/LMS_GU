@@ -102,27 +102,30 @@ export const dummyEducatorData = {
 }
 
 export const dummyTestimonial = [
-    {
-        name: 'Donald Jackman',
-        role: 'SWE 1 @ Amazon',
-        image: assets.profile_img_1,
-        rating: 5,
-        feedback: 'I\'ve been using Imagify for nearly two years, primarily for Instagram, and it has been incredibly user-friendly, making my work much easier.',
-    },
-    {
-        name: 'Richard Nelson',
-        role: 'SWE 2 @ Samsung',
-        image: assets.profile_img_2,
-        rating: 4,
-        feedback: 'I\'ve been using Imagify for nearly two years, primarily for Instagram, and it has been incredibly user-friendly, making my work much easier.',
-    },
-    {
-        name: 'James Washington',
-        role: 'SWE 2 @ Google',
-        image: assets.profile_img_3,
-        rating: 4.5,
-        feedback: 'I\'ve been using Imagify for nearly two years, primarily for Instagram, and it has been incredibly user-friendly, making my work much easier.',
-    },
+  {
+    name: "Ali Jabed Siddique",
+    role: "MSc IT Student - Gauhati University",
+    image: assets.profile_img_3,
+    rating: 5,
+    feedback:
+      "The platform made accessing lecture notes and assignments very convenient. It helped me stay organized and improve my academic performance.",
+  },
+  {
+    name: "Yuvraj Mahanta",
+    role: "MSc IT Student - Gauhati University",
+    image: assets.profile_img_1,
+    rating: 4,
+    feedback:
+      "The video lectures and resources are well structured. It made difficult subjects like Data Structures much easier to understand.",
+  },
+  {
+    name: "Bijit Sharma",
+    role: "Final Year CS Student - Gauhati University",
+    image: assets.profile_img_2,
+    rating: 4.5,
+    feedback:
+      "The practical projects and coding exercises gave me the confidence to apply for internships and prepare for placements.",
+  },
 ];
 
 export const dummyDashboardData = {

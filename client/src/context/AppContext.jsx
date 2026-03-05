@@ -80,26 +80,32 @@ export const AppContextProvider = ({ children }) => {
   };
 
   const loginStudent = async (email, password) => {
-    try {
-      const { data } = await axios.post(`${backendUrl}/students/login`, {
-        email,
-        password,
-      });
+  try {
+    const { data } = await axios.post(`${backendUrl}/students/login`, {
+      email,
+      password,
+    });
 
-      if (data.success && data.token) {
-        localStorage.setItem("studentToken", data.token);
-        await fetchStudentProfile(data.token);
-        return { success: true };
-      }
+    if (data.success && data.token) {
+      localStorage.setItem("studentToken", data.token);
 
-      return { success: false, message: data.message };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.response?.data?.message || "Login failed",
-      };
+      
+      setStudent(data.student);
+
+      navigate("/");
+
+      return { success: true };
     }
-  };
+
+    return { success: false, message: data.message };
+
+  } catch (error) {
+    return {
+      success: false,
+      message: error.response?.data?.message || "Login failed",
+    };
+  }
+};
 
   const logoutStudent = () => {
     localStorage.removeItem("studentToken");

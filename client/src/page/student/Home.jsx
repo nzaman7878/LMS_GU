@@ -4,6 +4,7 @@ import SearchBar from '../../components/students/SearchBar'
 import CoursesSection from '../../components/students/CoursesSection'
 import TestimonialsSection from '../../components/students/TestimonialsSection'
 import CallToAction from '../../components/students/CallToAction'
+import Footer from '../../components/students/Footer'
 
 
 const Home = () => {
@@ -14,6 +15,7 @@ const Home = () => {
     <CoursesSection />
     <TestimonialsSection />
     <CallToAction />
+    <Footer />
     </div>
   )
 }

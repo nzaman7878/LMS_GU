@@ -5,6 +5,7 @@ import Loading from "../../components/students/Loading";
 import { assets } from "../../assets/assets.js";
 import humanizeDuration from "humanize-duration";
 import VideoPlayer from "../../components/students/VideoPlayer";
+import Footer from "../../components/students/Footer";
 
 const CourseDetails = () => {
 
@@ -40,6 +41,7 @@ const CourseDetails = () => {
 
   return (
 
+   <>
     <div className="flex flex-col-reverse lg:flex-row gap-10 relative items-start justify-between px-4 sm:px-8 lg:px-20 xl:px-36 pt-20 lg:pt-28 text-left">
 
       <div className="absolute top-0 left-0 w-full h-[300px] md:h-section-height -z-10 bg-gradient-to-b from-cyan-100/70"></div>
@@ -221,7 +223,7 @@ const CourseDetails = () => {
 
         </div>
 
-        {/* COURSE DESCRIPTION */}
+        
         <div className="py-16 text-sm md:text-default">
 
           <h3 className="text-xl font-semibold text-gray-800">
@@ -242,93 +244,121 @@ const CourseDetails = () => {
      
       <div className="w-full lg:max-w-course-card lg:sticky lg:top-24 z-10 shadow-custom-card rounded-lg overflow-hidden bg-white">
 
-        <img src={courseData?.courseThumbnail} alt="course thumbnail" />
+  
+  <div className="relative w-full aspect-video bg-black">
 
-        <div className="p-5">
+    {playerData ? (
+      <VideoPlayer
+        data={playerData}
+        onClose={() => setPlayerData(null)}
+      />
+    ) : (
+      <>
+        <img
+          src={courseData?.courseThumbnail}
+          alt="course thumbnail"
+          className="w-full h-full object-cover"
+        />
 
-          {playerData && (
-            <div className="mb-4">
-              <VideoPlayer data={playerData} />
-            </div>
-          )}
-
-         
-          <div className="flex items-center gap-2">
-            <img className="w-3.5" src={assets.time_left_icon} alt="" />
-            <p className="text-red-500">
-              <span className="font-medium">5 days</span> left at this price!
-            </p>
+        <button
+          onClick={() =>
+            setPlayerData({
+              videoId: courseData?.coursePreviewUrl?.split("/").pop()
+            })
+          }
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          <div className="bg-black/60 p-4 rounded-full hover:scale-110 transition">
+            <img src={assets.play_icon} alt="play" className="w-8" />
           </div>
+        </button>
+      </>
+    )}
 
-          
-          <div className="flex flex-wrap gap-3 items-center pt-2">
+  </div>
 
-            <p className="text-gray-800 md:text-4xl text-2xl font-semibold">
-              {currency}
-              {(courseData?.coursePrice - (courseData?.discount * courseData?.coursePrice) / 100).toFixed(2)}
-            </p>
+  <div className="p-5">
 
-            <p className="md:text-lg text-gray-500 line-through">
-              {currency}{courseData?.coursePrice?.toFixed(2)}
-            </p>
+    <div className="flex items-center gap-2">
+      <img className="w-3.5" src={assets.time_left_icon} alt="" />
+      <p className="text-red-500">
+        <span className="font-medium">5 days</span> left at this price!
+      </p>
+    </div>
 
-            <p className="md:text-lg text-gray-500">
-              {courseData?.discount?.toFixed(2)}% off
-            </p>
+  
+    <div className="flex flex-wrap gap-3 items-center pt-2">
 
-          </div>
+      <p className="text-gray-800 md:text-4xl text-2xl font-semibold">
+        {currency}
+        {(courseData?.coursePrice - (courseData?.discount * courseData?.coursePrice) / 100).toFixed(2)}
+      </p>
 
-          
-          <div className="flex flex-wrap items-center text-sm md:text-default gap-4 pt-3 text-gray-500">
+      <p className="md:text-lg text-gray-500 line-through">
+        {currency}{courseData?.coursePrice?.toFixed(2)}
+      </p>
 
-            <div className="flex items-center gap-1">
-              <img src={assets.star} alt="" />
-              <p>{calculateRating(courseData)}</p>
-            </div>
+      <p className="md:text-lg text-gray-500">
+        {courseData?.discount?.toFixed(2)}% off
+      </p>
 
-            <div className="h-4 w-px bg-gray-500/40"></div>
+    </div>
 
-            <div className="flex items-center gap-1">
-              <img src={assets.time_clock_icon} alt="" />
-              <p>{calculateCourseDuration(courseData)}</p>
-            </div>
+    {/* Course Info */}
+    <div className="flex flex-wrap items-center text-sm md:text-default gap-4 pt-3 text-gray-500">
 
-            <div className="h-4 w-px bg-gray-500/40"></div>
+      <div className="flex items-center gap-1">
+        <img src={assets.star} alt="" />
+        <p>{calculateRating(courseData)}</p>
+      </div>
 
-            <div className="flex items-center gap-1">
-              <img src={assets.lesson_icon} alt="" />
-              <p>{calculateNoOfLectures(courseData)} lessons</p>
-            </div>
+      <div className="h-4 w-px bg-gray-500/40"></div>
 
-          </div>
+      <div className="flex items-center gap-1">
+        <img src={assets.time_clock_icon} alt="" />
+        <p>{calculateCourseDuration(courseData)}</p>
+      </div>
 
-          {/* Enroll Button */}
-          <button className="md:mt-6 mt-4 w-full py-3 rounded bg-blue-600 hover:bg-blue-700 transition text-white font-medium">
-            {isAlreadyEnrolled ? "Go to Course" : "Enroll Now"}
-          </button>
+      <div className="h-4 w-px bg-gray-500/40"></div>
 
-          
-          <div className="pt-6 text-gray-600 text-sm md:text-default">
-
-            <p className="md:text-xl text-lg font-medium text-gray-800">
-              What's in the course?
-            </p>
-
-            <ul className="ml-4 pt-2 list-disc text-gray-500">
-              <li>Lifetime access with free updates</li>
-              <li>Step by Step, hands-on project guidance</li>
-              <li>Downloadable resources and code</li>
-              <li>Quizzes to test your knowledge</li>
-              <li>Certificate of completion</li>
-            </ul>
-
-          </div>
-
-        </div>
-
+      <div className="flex items-center gap-1">
+        <img src={assets.lesson_icon} alt="" />
+        <p>{calculateNoOfLectures(courseData)} lessons</p>
       </div>
 
     </div>
+
+   
+    <button className="md:mt-6 mt-4 w-full py-3 rounded bg-blue-600 hover:bg-blue-700 transition text-white font-medium">
+      {isAlreadyEnrolled ? "Go to Course" : "Enroll Now"}
+    </button>
+
+  
+    <div className="pt-6 text-gray-600 text-sm md:text-default">
+
+      <p className="md:text-xl text-lg font-medium text-gray-800">
+        What's in the course?
+      </p>
+
+      <ul className="ml-4 pt-2 list-disc text-gray-500">
+        <li>Lifetime access with free updates</li>
+        <li>Step by Step, hands-on project guidance</li>
+        <li>Downloadable resources and code</li>
+        <li>Quizzes to test your knowledge</li>
+        <li>Certificate of completion</li>
+      </ul>
+
+    </div>
+
+  </div>
+
+</div>
+
+    </div>
+    <Footer />
+   
+   </>
+    
   );
 };
 

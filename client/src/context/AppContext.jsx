@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { dummyCourses } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
+import humanizeDuration from "humanize-duration";
 
 export const AppContext = createContext();
 
@@ -30,6 +31,45 @@ export const AppContextProvider = ({ children }) => {
 
     return totalRating / course.courseRatings.length;
   };
+
+
+const calculateChapterTime = (chapter) => {
+  let totalTime = 0;
+  chapter.chapterContent.map((lecture)=> totalTime += lecture.lectureDuration);
+  return humanizeDuration(totalTime * 60 * 1000, { units: ['h', 'm'], round: true });
+}
+
+const calculateCourseDuration = (course) => {
+
+  let totalTime = 0;
+
+  course?.courseContent?.forEach((chapter) => {
+
+    chapter?.chapterContent?.forEach((lecture) => {
+      totalTime += lecture?.lectureDuration || 0;
+    });
+
+  });
+
+  return humanizeDuration(totalTime * 60 * 1000, {
+    units: ["h", "m"],
+    round: true,
+  });
+
+};
+
+const calculateNoOfLectures = (course) => {
+
+  let totalLectures = 0;
+
+  course?.courseContent?.forEach((chapter) => {
+    totalLectures += chapter?.chapterContent?.length || 0;
+  });
+
+  return totalLectures;
+
+};
+
   useEffect(() => {
     fetchAllCourses();
   }, []);
@@ -146,6 +186,9 @@ const loginTeacher = async (email, password) => {
     navigate,
     calculateRating,
     loginTeacher,
+    calculateChapterTime,
+    calculateCourseDuration,
+    calculateNoOfLectures,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -1,101 +1,174 @@
-import { Link, useLocation } from 'react-router-dom'
-import { assets } from '../../assets/assets'
-import { useContext } from 'react'
-import { AppContext } from '../../context/AppContext'
+import { Link, useLocation } from "react-router-dom";
+import { assets } from "../../assets/assets";
+import { useContext, useState } from "react";
+import { AppContext } from "../../context/AppContext";
 
 const Navbar = () => {
 
-  const location = useLocation()
-  const { navigate, student } = useContext(AppContext)
+  const location = useLocation();
+  const { navigate, student } = useContext(AppContext);
 
-  const isCourseListPage = location.pathname === '/courses'
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  const isCourseListPage = location.pathname === "/courses";
+
+  const navLinks = [
+    { name: "Home", path: "/" },
+    { name: "Courses", path: "/course-list" },
+    { name: "About", path: "/about" },
+    { name: "Contact", path: "/contact" },
+  ];
 
   return (
-    <nav className={`border-b border-gray-300 shadow-sm ${
-      isCourseListPage ? 'bg-white' : 'bg-cyan-100/70 backdrop-blur-sm'
-    }`}>
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 grid grid-cols-3 items-center">
+    <nav
+      className={`border-b border-gray-300 shadow-sm sticky top-0 z-50 ${
+        isCourseListPage
+          ? "bg-white"
+          : "bg-cyan-100/70 backdrop-blur-sm"
+      }`}
+    >
 
- 
-  <div className="flex justify-start">
-    <img
-      src={assets.logo}
-      alt="Logo"
-      className="w-8 md:w-10 lg:w-12 cursor-pointer"
-      onClick={() => navigate('/')}
-    />
-  </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
 
-  
-  <div className="hidden md:flex justify-center gap-8 text-gray-700 font-medium">
-    <Link to="/" className="hover:text-blue-600 transition">
-      Home
-    </Link>
+        
+        <img
+          src={assets.logo}
+          alt="logo"
+          className="w-8 md:w-10 lg:w-12 cursor-pointer"
+          onClick={() => navigate("/")}
+        />
 
-    <Link to="/about" className="hover:text-blue-600 transition">
-      About
-    </Link>
+        
+        <div className="hidden md:flex items-center gap-8 text-gray-700 font-medium">
 
-    <Link to="/course-list" className="hover:text-blue-600 transition">
-      Courses
-    </Link>
+          {navLinks.map((link) => (
+            <Link
+              key={link.name}
+              to={link.path}
+              className={`hover:text-blue-600 transition ${
+                location.pathname === link.path
+                  ? "text-blue-600"
+                  : ""
+              }`}
+            >
+              {link.name}
+            </Link>
+          ))}
 
-    <Link to="/contact" className="hover:text-blue-600 transition">
-      Contact
-    </Link>
+        </div>
 
-    {student && (
-      <Link
-        to="/my-enrollments"
-        className="hover:text-blue-600 transition"
-      >
-        My Courses
-      </Link>
-    )}
+        
+        <div className="flex items-center gap-4 relative">
 
-    {student && (
-      <Link
-        to="/profile"
-        className="hover:text-blue-600 transition"
-      >
-        My Profile
-      </Link>
-    )}
-  </div>
+          {!student ? (
 
- 
-  <div className="flex justify-end items-center gap-4">
+            <button
+              onClick={() => navigate("/student/login")}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full transition text-sm font-medium"
+            >
+              Create Account
+            </button>
 
-    {!student ? (
-      <button
-        onClick={() => navigate('/student/login')}
-        className="bg-blue-600 hover:bg-blue-700 transition text-white px-5 py-2 rounded-full"
-      >
-        Create Account
-      </button>
-    ) : (
-      <button
-        onClick={() => {
-          localStorage.removeItem("token")
-          navigate("/")
-          window.location.reload()
-        }}
-          className="px-4 py-2 rounded-lg 
-             bg-red-500 text-white 
-             hover:bg-red-600 
-             transition duration-300 
-             text-sm font-medium"
-      >
-        Logout
-      </button>
-    )}
+          ) : (
 
-  </div>
+            
+            <div className="relative">
 
-</div>
+              <img
+                src={assets.profile_img}
+                alt="profile"
+                onClick={() => setProfileOpen(!profileOpen)}
+                className="w-9 h-9 rounded-full cursor-pointer border"
+              />
+
+              {profileOpen && (
+                <div className="absolute right-0 mt-3 w-48 bg-white rounded-lg shadow-lg border text-sm">
+
+                  <Link
+                    to="/my-enrollments"
+                    className="block px-4 py-3 hover:bg-gray-100"
+                  >
+                    My Courses
+                  </Link>
+
+                  <Link
+                    to="/profile"
+                    className="block px-4 py-3 hover:bg-gray-100"
+                  >
+                    My Profile
+                  </Link>
+
+                  <Link
+                    to="/settings"
+                    className="block px-4 py-3 hover:bg-gray-100"
+                  >
+                    Settings
+                  </Link>
+
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("token");
+                      navigate("/");
+                      window.location.reload();
+                    }}
+                    className="w-full text-left px-4 py-3 text-red-500 hover:bg-gray-100"
+                  >
+                    Logout
+                  </button>
+
+                </div>
+              )}
+
+            </div>
+
+          )}
+
+          
+          <button
+            className="md:hidden"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            <img
+              src={menuOpen ? assets.close_icon : assets.menu_icon}
+              alt="menu"
+              className="w-6"
+            />
+          </button>
+
+        </div>
+
+      </div>
+
+    
+      {menuOpen && (
+        <div className="md:hidden bg-cyan-100/70 border-t border-gray-300 px-6 py-4 space-y-4 text-gray-700 font-medium">
+
+          {navLinks.map((link) => (
+            <Link
+              key={link.name}
+              to={link.path}
+              onClick={() => setMenuOpen(false)}
+              className="block hover:text-blue-600"
+            >
+              {link.name}
+            </Link>
+          ))}
+
+          {!student && (
+            <button
+              onClick={() => navigate("/student/login")}
+              className="w-full bg-blue-600 text-white py-2 rounded-lg"
+            >
+              Create Account
+            </button>
+          )}
+
+        </div>
+      )}
+
     </nav>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;

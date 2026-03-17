@@ -8,14 +8,19 @@ export const AppContext = createContext();
 
 export const AppContextProvider = ({ children }) => {
   const currency = import.meta.env.VITE_CURRENCY || "$";
-
   const backendUrl = "http://localhost:3000/api";
-
   const navigate = useNavigate();
+
+  
   const [allcourses, setAllCourses] = useState([]);
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [enrolledCourses, setEnrolledCourses] = useState([]); 
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
+
+
+  const [isTeacher, setIsTeacher] = useState(false);
+  const [teacherData, setTeacherData] = useState(null);
+
 
   const fetchAllCourses = async () => {
     setAllCourses(dummyCourses);
@@ -25,7 +30,6 @@ export const AppContextProvider = ({ children }) => {
     if (!course.courseRatings || course.courseRatings.length === 0) return 0;
 
     let totalRating = 0;
-
     course.courseRatings.forEach((rating) => {
       totalRating += rating.rating;
     });
@@ -33,53 +37,47 @@ export const AppContextProvider = ({ children }) => {
     return totalRating / course.courseRatings.length;
   };
 
+  const calculateChapterTime = (chapter) => {
+    let totalTime = 0;
+    chapter.chapterContent.forEach(
+      (lecture) => (totalTime += lecture.lectureDuration)
+    );
 
-const calculateChapterTime = (chapter) => {
-  let totalTime = 0;
-  chapter.chapterContent.map((lecture)=> totalTime += lecture.lectureDuration);
-  return humanizeDuration(totalTime * 60 * 1000, { units: ['h', 'm'], round: true });
-}
+    return humanizeDuration(totalTime * 60 * 1000, {
+      units: ["h", "m"],
+      round: true,
+    });
+  };
 
-const calculateCourseDuration = (course) => {
+  const calculateCourseDuration = (course) => {
+    let totalTime = 0;
 
-  let totalTime = 0;
-
-  course?.courseContent?.forEach((chapter) => {
-
-    chapter?.chapterContent?.forEach((lecture) => {
-      totalTime += lecture?.lectureDuration || 0;
+    course?.courseContent?.forEach((chapter) => {
+      chapter?.chapterContent?.forEach((lecture) => {
+        totalTime += lecture?.lectureDuration || 0;
+      });
     });
 
-  });
+    return humanizeDuration(totalTime * 60 * 1000, {
+      units: ["h", "m"],
+      round: true,
+    });
+  };
 
-  return humanizeDuration(totalTime * 60 * 1000, {
-    units: ["h", "m"],
-    round: true,
-  });
+  const calculateNoOfLectures = (course) => {
+    let totalLectures = 0;
 
-};
+    course?.courseContent?.forEach((chapter) => {
+      totalLectures += chapter?.chapterContent?.length || 0;
+    });
 
-const calculateNoOfLectures = (course) => {
+    return totalLectures;
+  };
 
-  let totalLectures = 0;
+  const fetchUserEnrolledCourses = async () => {
+    setEnrolledCourses(dummyCourses);
+  };
 
-  course?.courseContent?.forEach((chapter) => {
-    totalLectures += chapter?.chapterContent?.length || 0;
-  });
-
-  return totalLectures;
-
-};
-
-const fetchUserEnrolledCourses = async () => {
-  setEnrolledCourses(dummyCourses);
-}
-
-
-  useEffect(() => {
-    fetchAllCourses();
-    fetchUserEnrolledCourses();
-  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("studentToken");
@@ -93,9 +91,12 @@ const fetchUserEnrolledCourses = async () => {
 
   const fetchStudentProfile = async (token) => {
     try {
-      const { data } = await axios.get(`${backendUrl}/students/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axios.get(
+        `${backendUrl}/students/profile`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       setStudent(data.student);
     } catch (error) {
@@ -105,15 +106,18 @@ const fetchUserEnrolledCourses = async () => {
     setLoading(false);
   };
 
-  const registerStudent = async (name, email, password) => {
+  const loginStudent = async (email, password) => {
     try {
-      const { data } = await axios.post(`${backendUrl}/students/register`, {
-        name,
-        email,
-        password,
-      });
+      const { data } = await axios.post(
+        `${backendUrl}/students/login`,
+        { email, password }
+      );
 
-      if (data.success) {
+      if (data.success && data.token) {
+        localStorage.setItem("studentToken", data.token);
+        setStudent(data.student);
+
+        navigate("/");
         return { success: true };
       }
 
@@ -121,78 +125,91 @@ const fetchUserEnrolledCourses = async () => {
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || "Registration failed",
+        message: error.response?.data?.message || "Login failed",
       };
     }
   };
-
-  const loginStudent = async (email, password) => {
-  try {
-    const { data } = await axios.post(`${backendUrl}/students/login`, {
-      email,
-      password,
-    });
-
-    if (data.success && data.token) {
-      localStorage.setItem("studentToken", data.token);
-
-      
-      setStudent(data.student);
-
-      navigate("/");
-
-      return { success: true };
-    }
-
-    return { success: false, message: data.message };
-
-  } catch (error) {
-    return {
-      success: false,
-      message: error.response?.data?.message || "Login failed",
-    };
-  }
-};
 
   const logoutStudent = () => {
     localStorage.removeItem("studentToken");
     setStudent(null);
   };
 
-const loginTeacher = async (email, password) => {
-  try {
-    const { data } = await axios.post(
-      `${backendUrl}/teacher/login`,
-      { email, password }
-    );
+  useEffect(() => {
+    const token = localStorage.getItem("teacherToken");
+    const teacher = localStorage.getItem("teacherData");
 
-    if (data.success && data.tToken) {
-      localStorage.setItem("teacherToken", data.tToken);
-      localStorage.setItem("teacherData", JSON.stringify(data.teacher));
-      return { success: true };
+    if (token && teacher) {
+      setIsTeacher(true);
+      setTeacherData(JSON.parse(teacher));
     }
+  }, []);
 
-    return { success: false, message: data.message };
+  const loginTeacher = async (email, password) => {
+    try {
+      const { data } = await axios.post(
+        `${backendUrl}/teacher/login`,
+        { email, password }
+      );
 
-  } catch (error) {
-    return {
-      success: false,
-      message: error.response?.data?.message || "Login failed",
-    };
-  }
-};
+      if (data.success && data.tToken) {
+        localStorage.setItem("teacherToken", data.tToken);
+        localStorage.setItem("teacherData", JSON.stringify(data.teacher));
+
+   
+        setIsTeacher(true);
+        setTeacherData(data.teacher);
+
+        navigate("/teacher/dashboard");
+
+        return { success: true };
+      }
+
+      return { success: false, message: data.message };
+
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Login failed",
+      };
+    }
+  };
+
+  const logoutTeacher = () => {
+    localStorage.removeItem("teacherToken");
+    localStorage.removeItem("teacherData");
+
+    setIsTeacher(false);
+    setTeacherData(null);
+
+    navigate("/login");
+  };
+
+
+  useEffect(() => {
+    fetchAllCourses();
+    fetchUserEnrolledCourses();
+  }, []);
+
 
   const value = {
+
     student,
-    registerStudent,
-    loading,
     loginStudent,
     logoutStudent,
+
+   
+    isTeacher,
+    teacherData,
+    loginTeacher,
+    logoutTeacher,
+
+    registerStudent: () => {},
+    loading,
     currency,
     allcourses,
     navigate,
     calculateRating,
-    loginTeacher,
     calculateChapterTime,
     calculateCourseDuration,
     calculateNoOfLectures,
@@ -201,7 +218,11 @@ const loginTeacher = async (email, password) => {
     fetchUserEnrolledCourses,
   };
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={value}>
+      {children}
+    </AppContext.Provider>
+  );
 };
 
 export const useAppContext = () => useContext(AppContext);

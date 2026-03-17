@@ -2,6 +2,7 @@ import React from 'react';
 import Navbar from '../../components/teacher/Navbar';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../../components/teacher/Sidebar';
+import Footer from '../../components/teacher/Footer';
 
 const Teacher = () => {
   return (
@@ -15,6 +16,7 @@ const Teacher = () => {
           <Outlet />
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

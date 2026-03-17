@@ -11,7 +11,7 @@ const Sidebar = () => {
     { name: 'Dashboard', path: '/teacher/dashboard', icon: assets.home_icon },
     { name: 'Add Course', path: '/teacher/add-course', icon: assets.add_icon },
     { name: 'My Courses', path: '/teacher/my-courses', icon: assets.my_course_icon },
-    { name: 'Students', path: '/teacher/student-enrolled', icon: assets.person_tick_icon }
+    { name: 'Students Enrolled', path: '/teacher/student-enrolled', icon: assets.person_tick_icon }
   ];
 
   if (!isTeacher) return null;

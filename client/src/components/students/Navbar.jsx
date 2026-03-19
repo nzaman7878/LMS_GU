@@ -13,9 +13,13 @@ const Navbar = () => {
 
   const isCourseListPage = location.pathname === "/courses";
 
-  const navLinks = [
+ const navLinks = [
     { name: "Home", path: "/" },
-    { name: "Courses", path: "/course-list" },
+    
+    { 
+      name: student ? "My Courses" : "Courses", 
+      path: student ? "/my-enrollments" : "/course-list" 
+    },
     { name: "About", path: "/about" },
     { name: "Contact", path: "/contact" },
   ];
@@ -65,7 +69,7 @@ const Navbar = () => {
 
             <button
               onClick={() => navigate("/student/login")}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full transition text-sm font-medium"
+              className="bg-blue-600 hover:bg-blue-700 hidden md:block text-white px-5 py-2 rounded-full transition text-sm font-medium"
             >
               Create Account
             </button>
@@ -93,18 +97,12 @@ const Navbar = () => {
                   </Link>
 
                   <Link
-                    to="/profile"
+                    to="/my-profile"
                     className="block px-4 py-3 hover:bg-gray-100"
                   >
                     My Profile
                   </Link>
 
-                  <Link
-                    to="/settings"
-                    className="block px-4 py-3 hover:bg-gray-100"
-                  >
-                    Settings
-                  </Link>
 
                   <button
                     onClick={() => {
@@ -130,7 +128,7 @@ const Navbar = () => {
             onClick={() => setMenuOpen(!menuOpen)}
           >
             <img
-              src={menuOpen ? assets.close_icon : assets.menu_icon}
+              src={menuOpen ? assets.cross_icon : assets.open_menu}
               alt="menu"
               className="w-6"
             />
@@ -158,7 +156,7 @@ const Navbar = () => {
           {!student && (
             <button
               onClick={() => navigate("/student/login")}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg"
+              className="w-full bg-blue-600  text-white py-2 rounded-lg"
             >
               Create Account
             </button>

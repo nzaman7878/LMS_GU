@@ -8,12 +8,8 @@ const MyEnrollments = () => {
   const { enrolledCourses, calculateCourseDuration, navigate } = useContext(AppContext);
 
   const [progressArray] = useState([
-    { courseId: 1, completedLectures: 4, totalLectures: 10 },
-    { courseId: 2, completedLectures: 2, totalLectures: 8 },
-    { courseId: 3, completedLectures: 6, totalLectures: 12 },
-    { courseId: 4, completedLectures: 4, totalLectures: 10 },
-    { courseId: 5, completedLectures: 2, totalLectures: 8 },
-    { courseId: 6, completedLectures: 6, totalLectures: 12 }
+    { courseId: 1, completedLectures: 4, totalLectures: 10 }
+
   ]);
 
   return (

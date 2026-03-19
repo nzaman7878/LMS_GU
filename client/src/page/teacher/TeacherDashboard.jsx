@@ -17,10 +17,9 @@ const TeacherDashboard = () => {
   return (
     <div className='min-h-screen p-4 md:p-8 space-y-8'>
 
-      {/* 🔹 TOP CARDS */}
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
 
-        {/* Enrollments */}
+      
         <div className='flex items-center gap-4 p-5 bg-white border rounded-lg shadow-sm'>
           <img src={assets.patients_icon} className='w-10' alt="" />
           <div>
@@ -31,7 +30,7 @@ const TeacherDashboard = () => {
           </div>
         </div>
 
-        {/* Courses */}
+        
         <div className='flex items-center gap-4 p-5 bg-white border rounded-lg shadow-sm'>
           <img src={assets.appointments_icon} className='w-10' alt="" />
           <div>
@@ -42,7 +41,7 @@ const TeacherDashboard = () => {
           </div>
         </div>
 
-        {/* Earnings */}
+   
         <div className='flex items-center gap-4 p-5 bg-white border rounded-lg shadow-sm'>
           <img src={assets.earning_icon} className='w-10' alt="" />
           <div>
@@ -55,7 +54,7 @@ const TeacherDashboard = () => {
 
       </div>
 
-      {/* 🔹 TABLE SECTION */}
+    
       <div className='bg-white rounded-lg shadow-sm border overflow-hidden'>
 
         <h2 className='text-lg font-semibold p-4 border-b'>

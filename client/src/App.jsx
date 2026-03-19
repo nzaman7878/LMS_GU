@@ -5,15 +5,19 @@ import Home from './page/student/Home'
 
 import CourseList from './page/student/CourseList'
 import CourseDetails from './page/student/CourseDetails'
+import MyProfile from './page/student/MyProfile'
+
 import MyEnrollments from './page/student/MyEnrollments'
 import Player from './page/student/Player'
 import Loading from './components/students/Loading'
+import About from './components/students/About'
 
 import Teacher from './page/teacher/Teacher'
 import TeacherDashboard from './page/teacher/TeacherDashboard'
 import AddCourse from './page/teacher/AddCourse'
 import MyCourses from './page/teacher/MyCourses'
 import StudentsEnrolled from './page/teacher/StudentsEnrolled'
+
 
 import Admin from './page/admin/Admin'
 import AdminDashboard from './page/admin/AdminDashboard'
@@ -24,6 +28,8 @@ import Navbar from './components/students/Navbar'
 import StudentLogin from './page/student/StudentLogin'
 import StudentDashboard from './page/student/StudentDashboard'
 import { useLocation } from 'react-router-dom';
+import "quill/dist/quill.snow.css";
+import Contact from './components/students/Contact'
 
 function App() {
 
@@ -43,9 +49,12 @@ const isTeacherRoute = location.pathname.startsWith('/teacher');
       <Route path='/course-list' element={<CourseList />} />
       <Route path='/course-list/:searchTerm' element={<CourseList />} />
       <Route path='/courses/:id' element={<CourseDetails />} />
+      <Route path='/my-profile' element={<MyProfile />} />
       <Route path='/my-enrollments' element={<MyEnrollments />} />
       <Route path='/player/:courseId' element={<Player />} />
       <Route path='/loading' element={<Loading />} />
+      <Route path='/contact' element={<Contact />} />
+      <Route path='/about' element={<About />} />
 
       
 <Route path='/teacher' element={<Teacher />} >

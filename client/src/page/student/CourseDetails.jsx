@@ -14,7 +14,7 @@ const CourseDetails = () => {
   const [courseData, setCourseData] = useState(null);
   const [openSections, setOpenSections] = useState({});
   const [playerData, setPlayerData] = useState(null);
-  const [isAlreadyEnrolled] = useState(false); // placeholder
+  const [isAlreadyEnrolled] = useState(false); 
 
   const {
     allcourses,

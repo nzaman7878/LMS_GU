@@ -7,7 +7,7 @@ import humanizeDuration from "humanize-duration";
 export const AppContext = createContext();
 
 export const AppContextProvider = ({ children }) => {
-  const currency = import.meta.env.VITE_CURRENCY || "$";
+  const currency = import.meta.env.VITE_CURRENCY || "₹";
   const backendUrl = "http://localhost:3000/api";
   const navigate = useNavigate();
 
@@ -106,6 +106,30 @@ export const AppContextProvider = ({ children }) => {
     setLoading(false);
   };
 
+const registerStudent = async (name, email, password) => {
+  try {
+    const { data } = await axios.post(
+      `${backendUrl}/students/register`, 
+      { name, email, password }
+    );
+
+   
+    if (data.success) {
+      return { success: true, message: data.message };
+    }
+
+    
+    return { success: false, message: data.message };
+
+  } catch (error) {
+   
+    return {
+      success: false,
+      message: error.response?.data?.message || "Registration failed. Please try again.",
+    };
+  }
+};
+
   const loginStudent = async (email, password) => {
     try {
       const { data } = await axios.post(
@@ -203,8 +227,7 @@ export const AppContextProvider = ({ children }) => {
     teacherData,
     loginTeacher,
     logoutTeacher,
-
-    registerStudent: () => {},
+    registerStudent,
     loading,
     currency,
     allcourses,

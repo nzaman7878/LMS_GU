@@ -1,6 +1,7 @@
 import educatorModel from "../models/educatorModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import Course from "../models/courseModel.js";
 
 const educatorLogin = async (req, res) => {
   try {
@@ -59,4 +60,19 @@ const educatorLogin = async (req, res) => {
   }
 };
 
-export { educatorLogin };
+
+const getEducatorCourses = async (req, res) => {
+
+  try {
+    const educator = req.educatorId; 
+
+    const courses = await Course.find({ educator });
+
+    res.json({ success: true, courses });
+
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export { educatorLogin , getEducatorCourses };

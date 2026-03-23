@@ -12,13 +12,12 @@ import authEducator from "../middleware/authEducator.js";
 const courseRouter = express.Router();
 
 
-
 courseRouter.post(
   "/create",
   authEducator,
+  uploadVideo.any(), 
   createCourse
 );
-
 
 
 courseRouter.post(
@@ -29,13 +28,11 @@ courseRouter.post(
 );
 
 
-
 courseRouter.post(
   "/:courseId/chapter/:chapterId/lecture/:lectureId/resource",
   authEducator,
   uploadResource.single("file"),
   addResource
 );
-
 
 export default courseRouter;

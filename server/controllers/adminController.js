@@ -1,10 +1,8 @@
 import jwt from "jsonwebtoken";
-import teacherModel from "../models/teacherModel.js";
+import educatorModel from "../models/educatorModel.js";
 import bcrypt from "bcrypt";
 
-
-
-const addTeacher = async (req, res) => {
+const addEducator = async (req, res) => {
   try {
     const {
       name,
@@ -17,31 +15,37 @@ const addTeacher = async (req, res) => {
     } = req.body;
 
    
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, Email, and Password are required",
+      });
+    }
+
+
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: "Image is required"
+        message: "Image is required",
       });
     }
 
     const image = req.file.filename;
 
-    
-    const existingTeacher = await teacherModel.findOne({ email });
+    const existingEducator = await educatorModel.findOne({ email });
 
-    if (existingTeacher) {
+    if (existingEducator) {
       return res.status(400).json({
         success: false,
-        message: "Teacher already exists"
+        message: "Educator already exists",
       });
     }
 
-   
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
    
-    const newTeacher = new teacherModel({
+    const newEducator = new educatorModel({
       name,
       email,
       password: hashedPassword,
@@ -52,18 +56,19 @@ const addTeacher = async (req, res) => {
       about,
     });
 
-    await newTeacher.save();
+    await newEducator.save();
 
     res.status(201).json({
       success: true,
-      message: "Teacher added successfully",
+      message: "Educator added successfully",
+      educator: newEducator,
     });
 
   } catch (error) {
     console.log(error);
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -107,4 +112,4 @@ const loginAdmin = async (req, res) => {
   }
 };
 
-export {loginAdmin , addTeacher };
+export {loginAdmin , addEducator };

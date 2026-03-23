@@ -1,27 +1,38 @@
 import express from "express";
-import { createCourse ,addLecture , addResource } from "../controllers/courseController.js";
+import {
+  createCourse,
+  addLecture,
+  addResource,
+} from "../controllers/courseController.js";
+
 import uploadVideo from "../middleware/multerVideo.js";
 import uploadResource from "../middleware/multerResource.js";
-import authTeacher from "../middleware/authTeacher.js";
-
+import authEducator from "../middleware/authEducator.js";
 
 const courseRouter = express.Router();
 
-courseRouter.post(
-    "/create",
-     authTeacher,
-      createCourse);
+
 
 courseRouter.post(
-  "/:courseId/module/:moduleId/lecture",
-  authTeacher,
+  "/create",
+  authEducator,
+  createCourse
+);
+
+
+
+courseRouter.post(
+  "/:courseId/chapter/:chapterId/lecture",
+  authEducator,
   uploadVideo.single("video"),
   addLecture
 );
 
+
+
 courseRouter.post(
-  "/:courseId/module/:moduleId/resource",
-  authTeacher,
+  "/:courseId/chapter/:chapterId/lecture/:lectureId/resource",
+  authEducator,
   uploadResource.single("file"),
   addResource
 );

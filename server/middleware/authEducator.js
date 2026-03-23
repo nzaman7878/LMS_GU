@@ -1,25 +1,27 @@
 import jwt from "jsonwebtoken";
 
-const authTeacher = async (req, res, next) => {
+const authEducator = async (req, res, next) => {
   try {
-    const { ttoken } = req.headers; 
+ 
+    const { etoken } = req.headers;
 
-    
-
-    if (!ttoken) {
+    if (!etoken) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized: No token provided",
       });
     }
 
-    const decoded = jwt.verify(ttoken, process.env.JWT_SECRET);
+    const decoded = jwt.verify(etoken, process.env.JWT_SECRET);
 
-    req.teacherId = decoded.id;
+  
+    req.educatorId = decoded.id;
+
     next();
 
   } catch (error) {
-    if (error.message === "jwt expired") {
+   
+    if (error.name === "TokenExpiredError") {
       return res.status(401).json({
         success: false,
         message: "Token expired",
@@ -33,4 +35,4 @@ const authTeacher = async (req, res, next) => {
   }
 };
 
-export default authTeacher;
+export default authEducator;

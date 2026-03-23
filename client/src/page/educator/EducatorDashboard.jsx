@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useContext } from 'react';
+import  { useEffect, useState, useContext } from 'react';
 import { AppContext } from '../../context/AppContext';
 import { assets, dummyDashboardData } from '../../assets/assets';
 import Loading from '../../components/students/Loading';
 
-const TeacherDashboard = () => {
+const EducatorDashboard = () => {
 
   const { currency } = useContext(AppContext);
   const [dashboardData, setDashboardData] = useState(null);
@@ -107,4 +107,4 @@ const TeacherDashboard = () => {
   );
 };
 
-export default TeacherDashboard;
+export default EducatorDashboard;

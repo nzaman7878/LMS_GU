@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const StudentLogin = () => {
 
-  const { loginStudent, registerStudent, loginTeacher } = useAppContext();
+  const { loginStudent, registerStudent, loginEducator } = useAppContext();
   const navigate = useNavigate();
 
   const [role, setRole] = useState("student"); 
@@ -19,13 +19,13 @@ const StudentLogin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+ 
+    if (role === "educator") {
 
-    if (role === "teacher") {
-
-      const res = await loginTeacher(form.email, form.password);
+      const res = await loginEducator(form.email, form.password);
 
       if (res.success) {
-        navigate("/teacher/dashboard");
+        navigate("/educator/dashboard");
       } else {
         alert(res.message);
       }
@@ -33,7 +33,7 @@ const StudentLogin = () => {
       return;
     }
 
-    
+
     if (isLogin) {
 
       const res = await loginStudent(form.email, form.password);
@@ -74,34 +74,42 @@ const StudentLogin = () => {
         className="bg-white p-8 rounded-xl shadow-md w-96"
       >
 
-        
+      
         <div className="flex mb-6">
           <button
             type="button"
             onClick={() => setRole("student")}
-            className={`flex-1 py-2 ${role === "student" ? "bg-blue-600 text-white" : "bg-gray-200"} rounded-l-lg`}
+            className={`flex-1 py-2 ${
+              role === "student"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200"
+            } rounded-l-lg`}
           >
             Student
           </button>
 
           <button
             type="button"
-            onClick={() => setRole("teacher")}
-            className={`flex-1 py-2 ${role === "teacher" ? "bg-green-600 text-white" : "bg-gray-200"} rounded-r-lg`}
+            onClick={() => setRole("educator")}
+            className={`flex-1 py-2 ${
+              role === "educator"
+                ? "bg-green-600 text-white"
+                : "bg-gray-200"
+            } rounded-r-lg`}
           >
-            Teacher
+            Educator
           </button>
         </div>
 
+        
         <h2 className="text-2xl font-bold mb-6 text-center">
-          {role === "teacher"
-            ? "Teacher Login"
+          {role === "educator"
+            ? "Educator Login"
             : isLogin
               ? "Student Login"
               : "Create Student Account"}
         </h2>
 
-        
         {role === "student" && !isLogin && (
           <input
             type="text"
@@ -113,6 +121,7 @@ const StudentLogin = () => {
           />
         )}
 
+        
         <input
           type="email"
           placeholder="Email"
@@ -122,6 +131,7 @@ const StudentLogin = () => {
           }
         />
 
+   
         <input
           type="password"
           placeholder="Password"
@@ -131,15 +141,16 @@ const StudentLogin = () => {
           }
         />
 
+      
         <button
           type="submit"
           className={`w-full py-3 rounded-lg transition text-white ${
-            role === "teacher"
+            role === "educator"
               ? "bg-green-600 hover:bg-green-700"
               : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
-          {role === "teacher"
+          {role === "educator"
             ? "Login"
             : isLogin
               ? "Login"

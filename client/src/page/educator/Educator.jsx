@@ -4,7 +4,7 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from '../../components/teacher/Sidebar';
 import Footer from '../../components/teacher/Footer';
 
-const Teacher = () => {
+const Educator = () => {
   return (
     <div className='min-h-screen bg-gray-50'>
       <Navbar />
@@ -21,4 +21,4 @@ const Teacher = () => {
   );
 };
 
-export default Teacher;
+export default Educator;

@@ -2,6 +2,7 @@ import educatorModel from "../models/educatorModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import Course from "../models/courseModel.js";
+import Purchase from "../models/purchaseModel"
 
 const educatorLogin = async (req, res) => {
   try {
@@ -75,4 +76,85 @@ const getEducatorCourses = async (req, res) => {
   }
 };
 
-export { educatorLogin , getEducatorCourses };
+
+ const educatorDashboardData = async (req, res) => {
+  try {
+    const educator = req.auth.userId;
+
+    const courses = await Course.find({ educator });
+    const totalCourses = courses.length;
+
+    const courseIds = courses.map((course) => course._id);
+
+    // Get all completed purchases
+    const purchases = await Purchase.find({
+      courseId: { $in: courseIds },
+      status: "completed",
+    });
+
+    // Total earnings
+    const totalEarnings = purchases.reduce(
+      (sum, purchase) => sum + purchase.amount,
+      0
+    );
+
+    // Collect enrolled students data
+    const enrolledStudentsData = [];
+
+    for (const course of courses) {
+      const students = await User.find(
+        { _id: { $in: course.enrolledStudents } },
+        "name imageUrl"
+      );
+
+      students.forEach((student) => {
+        enrolledStudentsData.push({
+          courseTitle: course.courseTitle,
+          student,
+        });
+      });
+    }
+
+    res.json({
+      success: true,
+      dashboardData: {
+        totalEarnings,
+        enrolledStudentsData,
+        totalCourses,
+      },
+    });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+
+ const getEnrolledStudentsData = async (req, res) => {
+  try {
+    const educator = req.auth.userId;
+
+    const courses = await Course.find({ educator });
+    const courseIds = courses.map((course) => course._id);
+
+    const purchases = await Purchase.find({
+      courseId: { $in: courseIds },
+      status: "completed",
+    })
+      .populate("userId", "name imageUrl")
+      .populate("courseId", "courseTitle");
+
+    const enrolledStudents = purchases.map((purchase) => ({
+      student: purchase.userId,
+      courseTitle: purchase.courseId.courseTitle,
+      purchaseDate: purchase.createdAt,
+    }));
+
+    res.json({ success: true, enrolledStudents });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+
+
+export { educatorLogin , getEducatorCourses , educatorDashboardData , getEnrolledStudentsData};

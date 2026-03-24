@@ -1,5 +1,5 @@
 import express from "express";
-import { educatorLogin, getEducatorCourses } from "../controllers/educatorController.js";
+import { educatorLogin, getEducatorCourses , educatorDashboardData , getEnrolledStudentsData} from "../controllers/educatorController.js";
 import authEducator from "../middleware/authEducator.js";
 
 
@@ -11,5 +11,8 @@ educatorRouter.post("/login", educatorLogin);
 
 
 educatorRouter.get("/courses", authEducator, getEducatorCourses);
+
+educatorRouter.get("/dashboard", authEducator, educatorDashboardData);
+educatorRouter.get("/enrolled-students", authEducator, getEnrolledStudentsData);
 
 export default educatorRouter;

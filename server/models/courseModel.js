@@ -65,12 +65,12 @@ const courseSchema = new mongoose.Schema(
       },
     ],
 
-    educator: { type: String, ref: "User", required: true },
+    educator: { type: String, ref: "Student", required: true },
 
     enrolledStudents: [
       {
         type: String,
-        ref: "User",
+        ref: "Student",
       },
     ],
   },

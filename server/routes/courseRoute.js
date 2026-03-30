@@ -3,6 +3,9 @@ import {
   createCourse,
   addLecture,
   addResource,
+  getAllCourse,
+  getCourseId
+
 } from "../controllers/courseController.js";
 
 import uploadVideo from "../middleware/multerVideo.js";
@@ -34,5 +37,8 @@ courseRouter.post(
   uploadResource.single("file"),
   addResource
 );
+
+courseRouter.get('/all', getAllCourse);
+courseRouter.get('/:id', getCourseId);
 
 export default courseRouter;

@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import Course from "../models/courseModel.js";
 import { Purchase } from "../models/purchaseModel.js";
+import studentModel from "../models/studentModel.js";
 
 const educatorLogin = async (req, res) => {
   try {
@@ -77,34 +78,32 @@ const getEducatorCourses = async (req, res) => {
 };
 
 
- const educatorDashboardData = async (req, res) => {
+const educatorDashboardData = async (req, res) => {
   try {
     const educator = req.auth.userId;
 
     const courses = await Course.find({ educator });
+
     const totalCourses = courses.length;
 
     const courseIds = courses.map((course) => course._id);
 
-    // Get all completed purchases
     const purchases = await Purchase.find({
       courseId: { $in: courseIds },
       status: "completed",
     });
 
-    // Total earnings
     const totalEarnings = purchases.reduce(
       (sum, purchase) => sum + purchase.amount,
       0
     );
 
-    // Collect enrolled students data
     const enrolledStudentsData = [];
 
     for (const course of courses) {
-      const students = await User.find(
+      const students = await studentModel.find(
         { _id: { $in: course.enrolledStudents } },
-        "name imageUrl"
+        "name image"
       );
 
       students.forEach((student) => {
@@ -123,6 +122,7 @@ const getEducatorCourses = async (req, res) => {
         totalCourses,
       },
     });
+
   } catch (error) {
     res.json({ success: false, message: error.message });
   }

@@ -3,6 +3,7 @@ import educatorModel from "../models/educatorModel.js";
 import cloudinary from "../config/cloudinary.js";
 
 
+
 export const createCourse = async (req, res) => {
   try {
     const { courseData } = req.body;

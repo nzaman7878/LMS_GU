@@ -2,7 +2,7 @@ import educatorModel from "../models/educatorModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import Course from "../models/courseModel.js";
-import Purchase from "../models/purchaseModel"
+import { Purchase } from "../models/purchaseModel.js";
 
 const educatorLogin = async (req, res) => {
   try {

@@ -3,22 +3,24 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 
+
+//  Register Student
 const registerStudent = async (req, res) => {
   try {
     const { name, email, password, image } = req.body;
 
-    
+   
     const existingStudent = await studentModel.findOne({ email });
-
     if (existingStudent) {
-      return res.status(400).json({ message: "Student already exists" });
+      return res.status(400).json({
+        success: false,
+        message: "Student already exists",
+      });
     }
 
- 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    
+   
     const student = await studentModel.create({
       name,
       email,
@@ -26,7 +28,7 @@ const registerStudent = async (req, res) => {
       image,
     });
 
-    
+    //  Generate token
     const token = jwt.sign(
       { id: student._id },
       process.env.JWT_SECRET,
@@ -34,8 +36,8 @@ const registerStudent = async (req, res) => {
     );
 
     res.status(201).json({
-      message: "Student registered successfully",
       success: true,
+      message: "Student registered successfully",
       token,
       student: {
         id: student._id,
@@ -44,30 +46,35 @@ const registerStudent = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
 
+// ✅ Login Student
 const loginStudent = async (req, res) => {
-
   try {
     const { email, password } = req.body;
 
     const student = await studentModel.findOne({ email });
-
     if (!student) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid credentials",
+      });
     }
 
-    
     const isMatch = await bcrypt.compare(password, student.password);
-
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid credentials",
+      });
     }
 
-  
     const token = jwt.sign(
       { id: student._id },
       process.env.JWT_SECRET,
@@ -75,8 +82,8 @@ const loginStudent = async (req, res) => {
     );
 
     res.status(200).json({
-      message: "Login successful",
       success: true,
+      message: "Login successful",
       token,
       student: {
         id: student._id,
@@ -85,8 +92,74 @@ const loginStudent = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
-export { registerStudent, loginStudent };
+
+// Get Student Data
+const getStudentData = async (req, res) => {
+  try {
+    const studentId = req.auth.userId;
+
+    const student = await studentModel
+      .findById(studentId)
+      .select("-password");
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student Not Found",
+      });
+    }
+
+    res.json({
+      success: true,
+      student,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+//Get Enrolled Courses
+const studentEnrolledCourses = async (req, res) => {
+  try {
+    const studentId = req.auth.userId;
+
+    const studentData = await studentModel
+      .findById(studentId)
+      .populate("enrolledCourses");
+
+    if (!studentData) {
+      return res.status(404).json({
+        success: false,
+        message: "Student Not Found",
+      });
+    }
+
+    res.json({
+      success: true,
+      enrolledCourses: studentData.enrolledCourses,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export {
+  registerStudent,
+  loginStudent,
+  getStudentData,
+  studentEnrolledCourses,
+};

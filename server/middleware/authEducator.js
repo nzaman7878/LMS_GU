@@ -6,7 +6,6 @@ const authEducator = async (req, res, next) => {
       req.headers.etoken || 
       req.headers.authorization?.split(" ")[1]; 
 
-    console.log("TOKEN:", token); // debug
 
     if (!token) {
       return res.status(401).json({

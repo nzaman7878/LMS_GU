@@ -8,85 +8,119 @@ import cloudinary from "../config/cloudinary.js";
 export const createCourse = async (req, res) => {
   try {
     const { courseData } = req.body;
-    const educatorId = req.educatorId;
+    const educatorId = req.educatorId; 
     const files = req.files || [];
 
-    const getFile = (fieldname) => files.find(f => f.fieldname === fieldname);
+   
+    console.log("Educator ID:", educatorId);
 
-    const thumbnailFile = getFile('thumbnail');
+    const getFile = (fieldname) =>
+      files.find((f) => f.fieldname === fieldname);
+
+    const thumbnailFile = getFile("thumbnail");
+
     if (!thumbnailFile) {
-      return res.json({ success: false, message: "Thumbnail is required" });
+      return res.json({
+        success: false,
+        message: "Thumbnail is required",
+      });
     }
 
     const educator = await educatorModel.findById(educatorId);
+
     if (!educator) {
-      return res.json({ success: false, message: "Educator not found" });
+      return res.json({
+        success: false,
+        message: "Educator not found",
+      });
     }
 
-   
     let parsedData = JSON.parse(courseData);
-    
 
+   
     parsedData.educator = educatorId;
-    parsedData.discount = parsedData.discount || 0; 
+    parsedData.discount = parsedData.discount || 0;
 
     if (!parsedData.courseContent || parsedData.courseContent.length === 0) {
       throw new Error("Course content is required");
     }
 
-  
-    const thumbnailUpload = await cloudinary.uploader.upload(thumbnailFile.path);
+    
+    const thumbnailUpload = await cloudinary.uploader.upload(
+      thumbnailFile.path
+    );
+
     parsedData.courseThumbnail = thumbnailUpload.secure_url;
     parsedData.thumbnailPublicId = thumbnailUpload.public_id;
 
- 
-    parsedData.courseContent = await Promise.all(parsedData.courseContent.map(async (chapter, cIdx) => {
-      
-    
-      chapter.chapterId = chapter.chapterId || `chap_${Date.now()}_${cIdx}`;
-      chapter.chapterOrder = chapter.chapterOrder || (cIdx + 1);
+    parsedData.courseContent = await Promise.all(
+      parsedData.courseContent.map(async (chapter, cIdx) => {
+        chapter.chapterId = chapter.chapterId || `chap_${Date.now()}_${cIdx}`;
+        chapter.chapterOrder = chapter.chapterOrder || cIdx + 1;
 
-      chapter.chapterContent = await Promise.all(chapter.chapterContent.map(async (lecture, lIdx) => {
-        
-      
-        lecture.lectureId = lecture.lectureId || `lec_${Date.now()}_${lIdx}`;
-        lecture.lectureOrder = lecture.lectureOrder || (lIdx + 1);
-        lecture.isPreviewFree = lecture.isPreviewFree ?? false; 
-        lecture.lectureDuration = Number(lecture.lectureDuration) || 0;
+        chapter.chapterContent = await Promise.all(
+          chapter.chapterContent.map(async (lecture, lIdx) => {
+            lecture.lectureId =
+              lecture.lectureId || `lec_${Date.now()}_${lIdx}`;
+            lecture.lectureOrder = lecture.lectureOrder || lIdx + 1;
+            lecture.isPreviewFree = lecture.isPreviewFree ?? false;
+            lecture.lectureDuration =
+              Number(lecture.lectureDuration) || 0;
 
-       
-        if (lecture.videoType === "youtube" && !lecture.youtubeUrl) {
-          throw new Error(`YouTube URL required for: ${lecture.lectureTitle}`);
-        }
+            if (lecture.videoType === "youtube" && !lecture.youtubeUrl) {
+              throw new Error(
+                `YouTube URL required for: ${lecture.lectureTitle}`
+              );
+            }
 
-      
-        if (lecture.videoType === "upload") {
-          const videoFile = getFile(lecture.videoFileName);
-          if (!videoFile) throw new Error(`Video missing for: ${lecture.lectureTitle}`);
+            if (lecture.videoType === "upload") {
+              const videoFile = getFile(lecture.videoFileName);
+              if (!videoFile)
+                throw new Error(
+                  `Video missing for: ${lecture.lectureTitle}`
+                );
 
-          const videoUpload = await cloudinary.uploader.upload(videoFile.path, { resource_type: "video" });
-          lecture.videoUrl = videoUpload.secure_url;
-          lecture.videoPublicId = videoUpload.public_id;
-        }
+              const videoUpload = await cloudinary.uploader.upload(
+                videoFile.path,
+                { resource_type: "video" }
+              );
 
-       
-        if (lecture.resources?.length > 0) {
-          for (let resource of lecture.resources) {
-            const resourceFile = getFile(resource.fileName);
-            if (!resourceFile) throw new Error(`Resource file missing for: ${resource.title}`);
+              lecture.videoUrl = videoUpload.secure_url;
+              lecture.videoPublicId = videoUpload.public_id;
+            }
 
-            const resourceUpload = await cloudinary.uploader.upload(resourceFile.path, { resource_type: "raw" });
-            resource.fileUrl = resourceUpload.secure_url;
-            resource.public_id = resourceUpload.public_id;
-          }
-        }
-        return lecture;
-      }));
-      return chapter;
-    }));
+            if (lecture.resources?.length > 0) {
+              for (let resource of lecture.resources) {
+                const resourceFile = getFile(resource.fileName);
+                if (!resourceFile)
+                  throw new Error(
+                    `Resource file missing for: ${resource.title}`
+                  );
 
- 
+                const upload = await cloudinary.uploader.upload(
+                  resourceFile.path,
+                  { resource_type: "raw" }
+                );
+
+                resource.fileUrl = upload.secure_url;
+                resource.public_id = upload.public_id;
+              }
+            }
+
+            return lecture;
+          })
+        );
+
+        return chapter;
+      })
+    );
+
     const newCourse = await courseModel.create(parsedData);
+
+   
+    await educatorModel.findByIdAndUpdate(educatorId, {
+      $push: { courses: newCourse._id },
+    });
 
     res.json({
       success: true,
@@ -199,7 +233,7 @@ export const addResource = async (req, res) => {
   }
 };
 
-// Get All Courses
+
 export const getAllCourse = async (req, res) => {
   try {
     const courses = await courseModel.find({ isPublished: true })
@@ -213,7 +247,7 @@ export const getAllCourse = async (req, res) => {
   }
 };
 
-// Get Course by Id
+
 export const getCourseId = async (req, res) => {
   const { id } = req.params;
 
@@ -228,7 +262,7 @@ export const getCourseId = async (req, res) => {
       });
     }
 
-    // Hide video if not preview free
+  
     courseData.courseContent.forEach(chapter => {
       chapter.chapterContent.forEach(lecture => {
         if (!lecture.isPreviewFree) {

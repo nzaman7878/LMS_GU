@@ -65,7 +65,11 @@ const courseSchema = new mongoose.Schema(
       },
     ],
 
-    educator: { type: String, ref: "Student", required: true },
+    educator: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "educator", 
+  required: true,
+},
 
     enrolledStudents: [
       {

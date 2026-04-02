@@ -5,11 +5,13 @@ import Course from "../models/courseModel.js";
 import { Purchase } from "../models/purchaseModel.js";
 import studentModel from "../models/studentModel.js";
 
+
+// LOGIN
+
 const educatorLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    
     const educator = await educatorModel.findOne({ email });
 
     if (!educator) {
@@ -19,7 +21,6 @@ const educatorLogin = async (req, res) => {
       });
     }
 
-   
     const isMatch = await bcrypt.compare(password, educator.password);
 
     if (!isMatch) {
@@ -29,14 +30,12 @@ const educatorLogin = async (req, res) => {
       });
     }
 
-   
     const eToken = jwt.sign(
       { id: educator._id },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    
     res.status(200).json({
       success: true,
       message: "Login successful",
@@ -63,10 +62,11 @@ const educatorLogin = async (req, res) => {
 };
 
 
-const getEducatorCourses = async (req, res) => {
+// GET EDUCATOR COURSES
 
+const getEducatorCourses = async (req, res) => {
   try {
-    const educator = req.educatorId; 
+    const educator = req.educatorId; // ✅ CORRECT
 
     const courses = await Course.find({ educator });
 
@@ -78,9 +78,11 @@ const getEducatorCourses = async (req, res) => {
 };
 
 
+// DASHBOARD DATA
+
 const educatorDashboardData = async (req, res) => {
   try {
-    const educator = req.auth.userId;
+    const educator = req.educatorId; 
 
     const courses = await Course.find({ educator });
 
@@ -129,9 +131,11 @@ const educatorDashboardData = async (req, res) => {
 };
 
 
- const getEnrolledStudentsData = async (req, res) => {
+// ENROLLED STUDENTS
+
+const getEnrolledStudentsData = async (req, res) => {
   try {
-    const educator = req.auth.userId;
+    const educator = req.educatorId; 
 
     const courses = await Course.find({ educator });
     const courseIds = courses.map((course) => course._id);
@@ -140,7 +144,7 @@ const educatorDashboardData = async (req, res) => {
       courseId: { $in: courseIds },
       status: "completed",
     })
-      .populate("userId", "name imageUrl")
+      .populate("userId", "name image") // Student model
       .populate("courseId", "courseTitle");
 
     const enrolledStudents = purchases.map((purchase) => ({
@@ -150,11 +154,15 @@ const educatorDashboardData = async (req, res) => {
     }));
 
     res.json({ success: true, enrolledStudents });
+
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
 };
 
-
-
-export { educatorLogin , getEducatorCourses , educatorDashboardData , getEnrolledStudentsData};
+export {
+  educatorLogin,
+  getEducatorCourses,
+  educatorDashboardData,
+  getEnrolledStudentsData,
+};

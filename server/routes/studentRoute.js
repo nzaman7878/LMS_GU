@@ -4,6 +4,7 @@ import {
   loginStudent,
   getStudentData,
   studentEnrolledCourses,
+  purchaseCourse,
 } from "../controllers/studentController.js";
 
 import authStudent from "../middleware/authStudent.js";
@@ -21,5 +22,7 @@ studentRouter.get(
   authStudent,
   studentEnrolledCourses
 );
+
+studentRouter.post("/purchase", authStudent, purchaseCourse);
 
 export default studentRouter;

@@ -1,6 +1,11 @@
+import Stripe from "stripe";
 import studentModel from "../models/studentModel.js";
+import Course from "../models/courseModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+
+
+import { Purchase } from "../models/purchaseModel.js";
 
 
 
@@ -157,9 +162,86 @@ const studentEnrolledCourses = async (req, res) => {
   }
 };
 
+const purchaseCourse = async (req, res) => {
+  try {
+    const { courseId } = req.body;
+    const { origin } = req.headers;
+
+    const studentId = req.auth.userId;
+
+   
+    const studentData = await studentModel.findById(studentId);
+    const courseData = await Course.findById(courseId);
+
+    if (!studentData || !courseData) {
+      return res.json({
+        success: false,
+        message: "Data Not Found",
+      });
+    }
+
+   
+    if (studentData.enrolledCourses.includes(courseId)) {
+      return res.json({
+        success: false,
+        message: "Already Enrolled",
+      });
+    }
+
+    
+    const amount =
+      courseData.coursePrice -
+      (courseData.discount * courseData.coursePrice) / 100;
+
+    const newPurchase = await Purchase.create({
+      courseId: courseData._id,
+      userId: studentId,
+      amount,
+    });
+
+    
+    const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const currency = process.env.CURRENCY.toLowerCase();
+
+    const line_items = [
+      {
+        price_data: {
+          currency,
+          product_data: {
+            name: courseData.courseTitle,
+          },
+          unit_amount: Math.floor(amount * 100),
+        },
+        quantity: 1,
+      },
+    ];
+
+    const session = await stripeInstance.checkout.sessions.create({
+      success_url: `${origin}/loading/my-enrollments`,
+      cancel_url: `${origin}/`,
+      line_items,
+      mode: "payment",
+      metadata: {
+        purchaseId: newPurchase._id.toString(),
+      },
+    });
+
+    res.json({
+      success: true,
+      session_url: session.url,
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export {
   registerStudent,
   loginStudent,
   getStudentData,
   studentEnrolledCourses,
+  purchaseCourse,
 };

@@ -71,12 +71,12 @@ const courseSchema = new mongoose.Schema(
   required: true,
 },
 
-    enrolledStudents: [
-      {
-        type: String,
-        ref: "Student",
-      },
-    ],
+   enrolledStudents: [
+  {
+    type: mongoose.Schema.Types.ObjectId,  
+    ref: "Student",
+  },
+],
   },
   { timestamps: true, minimize: false }
 );

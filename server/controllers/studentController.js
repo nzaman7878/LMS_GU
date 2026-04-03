@@ -165,11 +165,11 @@ const studentEnrolledCourses = async (req, res) => {
 const purchaseCourse = async (req, res) => {
   try {
     const { courseId } = req.body;
-    const { origin } = req.headers;
+
+    const origin = process.env.CLIENT_URL;
 
     const studentId = req.auth.userId;
 
-   
     const studentData = await studentModel.findById(studentId);
     const courseData = await Course.findById(courseId);
 
@@ -180,15 +180,18 @@ const purchaseCourse = async (req, res) => {
       });
     }
 
-   
-    if (studentData.enrolledCourses.includes(courseId)) {
+    if (
+      studentData.enrolledCourses.some(
+        (id) => id.toString() === courseId.toString()
+      )
+    ) {
       return res.json({
         success: false,
         message: "Already Enrolled",
       });
     }
 
-    
+   
     const amount =
       courseData.coursePrice -
       (courseData.discount * courseData.coursePrice) / 100;
@@ -199,7 +202,9 @@ const purchaseCourse = async (req, res) => {
       amount,
     });
 
-    
+    console.log("🧾 Purchase Created:", newPurchase._id);
+
+   
     const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
     const currency = process.env.CURRENCY.toLowerCase();
 
@@ -216,6 +221,7 @@ const purchaseCourse = async (req, res) => {
       },
     ];
 
+    
     const session = await stripeInstance.checkout.sessions.create({
       success_url: `${origin}/loading/my-enrollments`,
       cancel_url: `${origin}/`,
@@ -226,11 +232,15 @@ const purchaseCourse = async (req, res) => {
       },
     });
 
+    console.log("💳 Stripe Session Created:", session.id);
+
     res.json({
       success: true,
       session_url: session.url,
     });
   } catch (error) {
+    console.log("Purchase Error:", error.message);
+
     res.json({
       success: false,
       message: error.message,

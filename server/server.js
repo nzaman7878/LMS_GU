@@ -16,24 +16,29 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 connectDB();
-
-
-app.post("/api/webhook/stripe", express.raw({ type: "application/json" }), stripeWebhooks);
-
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: [
+    "http://localhost:5173",
+    process.env.CLIENT_URL  
+  ],
   credentials: true,
 }));
 
+app.post(
+  "/api/webhook/stripe",
+  express.raw({ type: "application/json" }),
+  stripeWebhooks
+);
+
+
 app.use(express.json());
 
-// ✅ 3. ROUTES
+
 app.use("/api/admin", adminRoute);
 app.use("/api/educator", educatorRoute);
 app.use("/api/students", studentRoute);
 app.use("/api/course", courseRoute);
 
-// ✅ 4. TEST ROUTE
 app.get("/", (req, res) => {
   res.send("Server is running");
 });

@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 import { Purchase } from "../models/purchaseModel.js";
 import studentModel from "../models/studentModel.js";
-import Course from "../models/courseModel.js"; 
+import Course from "../models/courseModel.js";
 
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -15,7 +15,9 @@ export const stripeWebhooks = async (request, response) => {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
+    console.log("✅ Webhook verified, event type:", event.type); 
   } catch (err) {
+    console.error("❌ Webhook verification failed:", err.message); 
     return response.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -24,30 +26,44 @@ export const stripeWebhooks = async (request, response) => {
 
       case "checkout.session.completed": {
         const session = event.data.object;
+        console.log("📦 Session metadata:", session.metadata); 
+
         const { purchaseId } = session.metadata;
+        console.log("🔍 Looking for purchaseId:", purchaseId);
 
         const purchaseData = await Purchase.findById(purchaseId);
-        if (!purchaseData) break;
+        console.log("🧾 Purchase found:", purchaseData); 
+
+        if (!purchaseData) {
+          console.log("❌ No purchase found for id:", purchaseId);
+          break;
+        }
 
         const userData = await studentModel.findById(purchaseData.userId);
-        const courseData = await Course.findById(purchaseData.courseId); 
+        console.log("👤 User found:", userData?._id); 
 
-        if (!userData || !courseData) break;
+        const courseData = await Course.findById(purchaseData.courseId);
+        console.log("📚 Course found:", courseData?._id); 
+        if (!userData || !courseData) {
+          console.log("❌ User or Course not found");
+          break;
+        }
 
         if (!courseData.enrolledStudents.some(id => id.toString() === userData._id.toString())) {
           courseData.enrolledStudents.push(userData._id);
           await courseData.save();
+          console.log("✅ Student added to course");
         }
 
         if (!userData.enrolledCourses.some(id => id.toString() === courseData._id.toString())) {
           userData.enrolledCourses.push(courseData._id);
           await userData.save();
+          console.log("✅ Course added to student");
         }
 
         purchaseData.status = "completed";
         await purchaseData.save();
-
-        console.log("✅ Payment successful:", purchaseId);
+        console.log("✅ Purchase status updated to completed:", purchaseId);
         break;
       }
 
@@ -60,8 +76,7 @@ export const stripeWebhooks = async (request, response) => {
 
         purchaseData.status = "failed";
         await purchaseData.save();
-
-        console.log("❌ Session expired:", purchaseId);
+        console.log(" Session expired:", purchaseId);
         break;
       }
 
@@ -71,7 +86,8 @@ export const stripeWebhooks = async (request, response) => {
 
     response.json({ received: true });
   } catch (error) {
-    console.error("Webhook error:", error.message);
+    console.error("❌ Webhook handler error:", error.message);
+    console.error(error.stack);
     response.status(500).json({ success: false });
   }
 };

@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { Purchase } from "../models/purchaseModel.js";
-import studentModel from "../models/studentModel.js"; 
+import studentModel from "../models/studentModel.js";
+import Course from "../models/courseModel.js"; 
 
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -21,15 +22,15 @@ export const stripeWebhooks = async (request, response) => {
   try {
     switch (event.type) {
 
-      case "checkout.session.completed": { 
+      case "checkout.session.completed": {
         const session = event.data.object;
-        const { purchaseId } = session.metadata; 
+        const { purchaseId } = session.metadata;
 
         const purchaseData = await Purchase.findById(purchaseId);
         if (!purchaseData) break;
 
         const userData = await studentModel.findById(purchaseData.userId);
-        const courseData = await Course.findById(purchaseData.courseId);
+        const courseData = await Course.findById(purchaseData.courseId); 
 
         if (!userData || !courseData) break;
 
@@ -46,7 +47,7 @@ export const stripeWebhooks = async (request, response) => {
         purchaseData.status = "completed";
         await purchaseData.save();
 
-        console.log(" Payment successful:", purchaseId);
+        console.log("✅ Payment successful:", purchaseId);
         break;
       }
 

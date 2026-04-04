@@ -290,6 +290,28 @@ const purchaseCourse = async (req, res) => {
   }
 };
 
+// get User Course Progress
+const getUserCourseProgress = async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const { courseId } = req.body;
+
+    const progressData = await CourseProgress.findOne({
+      userId,
+      courseId,
+    });
+
+    res.json({
+      success: true,
+      progressData,
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 export {
   registerStudent,
   loginStudent,
@@ -297,4 +319,5 @@ export {
   studentEnrolledCourses,
   purchaseCourse,
   updateUserCourseProgress,
+  getUserCourseProgress,
 };

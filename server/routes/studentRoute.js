@@ -6,6 +6,7 @@ import {
   studentEnrolledCourses,
   purchaseCourse,
   updateUserCourseProgress,
+  getUserCourseProgress,
 } from "../controllers/studentController.js";
 
 import authStudent from "../middleware/authStudent.js";
@@ -26,5 +27,6 @@ studentRouter.get(
 
 studentRouter.post("/purchase", authStudent, purchaseCourse);
 studentRouter.post("/update-course-progress", authStudent, updateUserCourseProgress);
+studentRouter.post("/get-course-progress", authStudent, getUserCourseProgress);
 
 export default studentRouter;

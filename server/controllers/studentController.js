@@ -3,6 +3,7 @@ import studentModel from "../models/studentModel.js";
 import Course from "../models/courseModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { CourseProgress } from "../models/courseProgressModel.js";
 
 
 import { Purchase } from "../models/purchaseModel.js";
@@ -202,7 +203,7 @@ const purchaseCourse = async (req, res) => {
       amount,
     });
 
-    console.log("🧾 Purchase Created:", newPurchase._id);
+    console.log(" Purchase Created:", newPurchase._id);
 
    
     const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -232,7 +233,7 @@ const purchaseCourse = async (req, res) => {
       },
     });
 
-    console.log("💳 Stripe Session Created:", session.id);
+    console.log(" Stripe Session Created:", session.id);
 
     res.json({
       success: true,
@@ -248,10 +249,52 @@ const purchaseCourse = async (req, res) => {
   }
 };
 
+// Update User Course Progress
+ const updateUserCourseProgress = async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const { courseId, lectureId } = req.body;
+
+    let progressData = await CourseProgress.findOne({
+      userId,
+      courseId,
+    });
+
+    if (progressData) {
+      if (progressData.lectureCompleted.includes(lectureId)) {
+        return res.json({
+          success: true,
+          message: "Lecture Already Completed",
+        });
+      }
+
+      progressData.lectureCompleted.push(lectureId);
+      await progressData.save();
+    } else {
+      progressData = await CourseProgress.create({
+        userId,
+        courseId,
+        lectureCompleted: [lectureId],
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Progress Updated",
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export {
   registerStudent,
   loginStudent,
   getStudentData,
   studentEnrolledCourses,
   purchaseCourse,
+  updateUserCourseProgress,
 };

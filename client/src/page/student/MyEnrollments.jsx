@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react"; // Added missing imports
+import React, { useContext, useState, useEffect } from "react"; 
 import { AppContext } from "../../context/AppContext";
 import { Line } from "rc-progress";
 import Footer from "../../components/students/Footer";

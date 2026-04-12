@@ -8,14 +8,10 @@ export const AppContext = createContext();
 
 export const AppContextProvider = ({ children }) => {
   const currency = import.meta.env.VITE_CURRENCY || "₹";
-
-  
-  const backendUrl =
-    import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
   const navigate = useNavigate();
 
-  const [allcourses, setAllCourses] = useState([]);
+  const [allCourses, setAllCourses] = useState([]);
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
@@ -23,25 +19,16 @@ export const AppContextProvider = ({ children }) => {
   const [educatorData, setEducatorData] = useState(null);
 
 
-
   const calculateRating = (course) => {
-    if (!course.courseRatings || course.courseRatings.length === 0) return 0;
-    const totalRating = course.courseRatings.reduce(
-      (acc, curr) => acc + curr.rating,
-      0
-    );
+    if (!course?.courseRatings || course.courseRatings.length === 0) return 0;
+    const totalRating = course.courseRatings.reduce((acc, curr) => acc + curr.rating, 0);
     return (totalRating / course.courseRatings.length).toFixed(1);
   };
 
   const calculateChapterTime = (chapter) => {
     let totalTime = 0;
-    chapter.chapterContent.forEach(
-      (lecture) => (totalTime += lecture.lectureDuration)
-    );
-    return humanizeDuration(totalTime * 60 * 1000, {
-      units: ["h", "m"],
-      round: true,
-    });
+    chapter?.chapterContent?.forEach((lecture) => (totalTime += lecture.lectureDuration));
+    return humanizeDuration(totalTime * 60 * 1000, { units: ["h", "m"], round: true });
   };
 
   const calculateCourseDuration = (course) => {
@@ -51,10 +38,7 @@ export const AppContextProvider = ({ children }) => {
         totalTime += lecture?.lectureDuration || 0;
       });
     });
-    return humanizeDuration(totalTime * 60 * 1000, {
-      units: ["h", "m"],
-      round: true,
-    });
+    return humanizeDuration(totalTime * 60 * 1000, { units: ["h", "m"], round: true });
   };
 
   const calculateNoOfLectures = (course) => {
@@ -65,13 +49,11 @@ export const AppContextProvider = ({ children }) => {
     return totalLectures;
   };
 
- 
 
-  //  Fetch All Courses
+
   const fetchAllCourses = async () => {
     try {
       const { data } = await axios.get(`${backendUrl}/api/course/all`);
-
       if (data.success) {
         setAllCourses(data.courses);
       } else {
@@ -82,195 +64,95 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
-  // Fetch Enrolled Courses
   const fetchUserEnrolledCourses = async () => {
     try {
       const token = localStorage.getItem("studentToken");
-
-    
       if (!token) return;
 
-      const { data } = await axios.get(
-        `${backendUrl}/api/students/enrolled-courses`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const { data } = await axios.get(`${backendUrl}/api/students/enrolled-courses`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (data.success) {
         setEnrolledCourses(data.enrolledCourses.reverse());
-      } else {
-        toast.error(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      console.error(error.message);
     }
   };
 
-  // Fetch Student Profile
   const fetchStudentProfile = async (token) => {
     try {
-      const { data } = await axios.get(
-        `${backendUrl}/api/students/profile`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
+      const { data } = await axios.get(`${backendUrl}/api/students/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (data.success) {
         setStudent(data.student);
       }
     } catch (error) {
       localStorage.removeItem("studentToken");
       setStudent(null);
-      toast.error("Session expired. Please login again.");
     } finally {
       setLoading(false);
     }
   };
 
- 
 
-  const registerStudent = async (name, email, password) => {
-    try {
-      const { data } = await axios.post(
-        `${backendUrl}/api/students/register`,
-        { name, email, password }
-      );
-
-      return data.success
-        ? { success: true, message: data.message }
-        : { success: false, message: data.message };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.response?.data?.message || "Registration failed",
-      };
-    }
-  };
 
   const loginStudent = async (email, password) => {
     try {
-      const { data } = await axios.post(
-        `${backendUrl}/api/students/login`,
-        { email, password }
-      );
-
+      const { data } = await axios.post(`${backendUrl}/api/students/login`, { email, password });
       if (data.success && data.token) {
         localStorage.setItem("studentToken", data.token);
         setStudent(data.student);
-        navigate("/");
+        fetchUserEnrolledCourses(); 
         return { success: true };
       }
-
       return { success: false, message: data.message };
     } catch (error) {
-      return {
-        success: false,
-        message: error.response?.data?.message || "Login failed",
-      };
+      return { success: false, message: error.response?.data?.message || "Login failed" };
     }
   };
 
   const logoutStudent = () => {
     localStorage.removeItem("studentToken");
     setStudent(null);
+    setEnrolledCourses([]);
     navigate("/");
   };
 
-  const loginEducator = async (email, password) => {
-    try {
-      const { data } = await axios.post(
-        `${backendUrl}/api/educator/login`,
-        { email, password }
-      );
 
-      if (data.success && data.eToken) {
-        localStorage.setItem("educatorToken", data.eToken);
-        localStorage.setItem(
-          "educatorData",
-          JSON.stringify(data.educator)
-        );
-
-        setIsEducator(true);
-        setEducatorData(data.educator);
-        navigate("/educator/dashboard");
-
-        return { success: true };
-      }
-
-      return { success: false, message: data.message };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.response?.data?.message || "Login failed",
-      };
-    }
-  };
-
-  const logoutEducator = () => {
-    localStorage.removeItem("educatorToken");
-    localStorage.removeItem("educatorData");
-    setIsEducator(false);
-    setEducatorData(null);
-    navigate("/");
-  };
-
- 
 
   useEffect(() => {
     fetchAllCourses();
-    fetchUserEnrolledCourses();
-
+    
     const studentToken = localStorage.getItem("studentToken");
     if (studentToken) {
       fetchStudentProfile(studentToken);
+      fetchUserEnrolledCourses();
     } else {
       setLoading(false);
     }
 
     const eToken = localStorage.getItem("educatorToken");
     const eData = localStorage.getItem("educatorData");
-
     if (eToken && eData) {
       setIsEducator(true);
       setEducatorData(JSON.parse(eData));
     }
   }, []);
 
-
-
   const value = {
-    student,
-    loginStudent,
-    logoutStudent,
-    registerStudent,
-
-    isEducator,
-    educatorData,
-    loginEducator,
-    logoutEducator,
-
-    loading,
-    currency,
-    allcourses,
-    navigate,
-
-    enrolledCourses,
-    setEnrolledCourses,
-    fetchUserEnrolledCourses,
-
-    calculateRating,
-    calculateChapterTime,
-    calculateCourseDuration,
-    calculateNoOfLectures,
+    student, setStudent,
+    loginStudent, logoutStudent,
+    allCourses, fetchAllCourses,
+    enrolledCourses, fetchUserEnrolledCourses,
+    currency, backendUrl, navigate, loading,
+    calculateRating, calculateChapterTime, calculateCourseDuration, calculateNoOfLectures,
+    isEducator, educatorData, setIsEducator, setEducatorData
   };
 
-  return (
-    <AppContext.Provider value={value}>{children}</AppContext.Provider>
-  );
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
 export const useAppContext = () => useContext(AppContext);

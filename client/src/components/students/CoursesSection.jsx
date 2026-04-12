@@ -5,7 +5,7 @@ import CourseCard from './CourseCard'
 
 const CoursesSection = () => {
 
-  const { allcourses } = useContext(AppContext)
+  const { allCourses } = useContext(AppContext)
 
   return (
     <div className="py-16 md:px-20 px-6 text-center">
@@ -22,7 +22,7 @@ const CoursesSection = () => {
 
       
       <div className="grid sm:grid-cols-auto lg:grid-cols-4 gap-6 mt-12">
-        {allcourses?.slice(0, 4).map((course) => (
+        {allCourses?.slice(0, 4).map((course) => (
           <CourseCard key={course._id} course={course} />
         ))}
       </div>

@@ -8,7 +8,7 @@ import Footer from "../../components/students/Footer"
 
 const CourseList = () => {
 
-  const { navigate, allcourses } = useContext(AppContext)
+  const { navigate, allCourses } = useContext(AppContext)
   const { searchTerm } = useParams()
 
   const [filteredCourses, setFilteredCourses] = useState([])
@@ -16,17 +16,17 @@ const CourseList = () => {
   useEffect(() => {
 
     if (searchTerm) {
-      const results = allcourses?.filter((course) =>
+      const results = allCourses?.filter((course) =>
         course.courseTitle.toLowerCase().includes(searchTerm.toLowerCase())
       )
 
       setFilteredCourses(results)
 
     } else {
-      setFilteredCourses(allcourses)
+      setFilteredCourses(allCourses)
     }
 
-  }, [searchTerm, allcourses])
+  }, [searchTerm, allCourses])
 
   return (
     <>

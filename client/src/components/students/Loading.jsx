@@ -1,19 +1,23 @@
-
+import React, { useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 const Loading = () => {
+  const { path } = useParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (path) {
+      const timer = setTimeout(() => {
+        navigate(`/${path}`);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   return (
-    <div className="flex items-center justify-center min-h-[300px] w-full">
-      
-      <div className="flex flex-col items-center gap-3">
-        
-     
-        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-
-       
-        <p className="text-gray-500 text-sm">Loading...</p>
-
-      </div>
-
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-16 sm:w-20 aspect-square border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 };

@@ -25,18 +25,21 @@ const Player = () => {
   const [progressData, setProgressData] = useState(null);
   const [initialRating, setInitialRating] = useState(0);
 
-  const getCourseData = () => {
-    enrolledCourses.forEach((course) => {
-      if (course._id === courseId) {
-        setCourseData(course);
-        course.courseRatings?.forEach((item) => {
-          if (item.userId === student?._id) {
-            setInitialRating(item.rating);
-          }
-        });
+const getCourseData = () => {
+  enrolledCourses.forEach((course) => {
+    if (course._id === courseId) {
+      setCourseData(course);
+
+      const userRating = course.courseRatings?.find(
+        (item) => item.userId === student?._id
+      );
+
+      if (userRating) {
+        setInitialRating((prev) => prev || userRating.rating);
       }
-    });
-  };
+    }
+  });
+};
 
   const markLectureAsCompleted = async (lectureId) => {
     try {
@@ -78,6 +81,7 @@ const Player = () => {
   };
 
  const handleRate = async (rating) => {
+  console.log("Clicked rating:", rating); 
   try {
     const token = localStorage.getItem("studentToken");
     const { data } = await axios.post(

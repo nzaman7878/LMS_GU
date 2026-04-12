@@ -314,7 +314,7 @@ const getUserCourseProgress = async (req, res) => {
 };
 
 // Add User Ratings to Course
- const addUserRating = async (req, res) => {
+const addUserRating = async (req, res) => {
   const userId = req.auth.userId;
   const { courseId, rating } = req.body;
 
@@ -335,33 +335,44 @@ const getUserCourseProgress = async (req, res) => {
       });
     }
 
-    const user = await User.findById(userId);
+  
+    const student = await studentModel.findById(userId);
 
-    if (!user || !user.enrolledCourses.includes(courseId)) {
+    const isEnrolled = student?.enrolledCourses.some(
+      (id) => id.toString() === courseId.toString()
+    );
+
+    if (!student || !isEnrolled) {
       return res.json({
         success: false,
         message: "User has not purchased this course.",
       });
     }
 
-    
     const existingRatingIndex = course.courseRatings.findIndex(
-      (r) => r.userId === userId
+      (r) => r.userId.toString() === userId.toString()
     );
 
     if (existingRatingIndex > -1) {
-      
+     
       course.courseRatings[existingRatingIndex].rating = rating;
     } else {
-
+  
       course.courseRatings.push({ userId, rating });
     }
 
     await course.save();
 
+    const totalRatings = course.courseRatings.length;
+    const avgRating =
+      course.courseRatings.reduce((acc, item) => acc + item.rating, 0) /
+      totalRatings;
+
     return res.json({
       success: true,
-      message: "Rating added",
+      message: "Rating added successfully",
+      courseRatings: course.courseRatings,
+      averageRating: avgRating.toFixed(1),
     });
   } catch (error) {
     return res.json({
@@ -370,7 +381,6 @@ const getUserCourseProgress = async (req, res) => {
     });
   }
 };
-
 export {
   registerStudent,
   loginStudent,

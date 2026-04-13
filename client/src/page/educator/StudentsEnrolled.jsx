@@ -1,7 +1,8 @@
 import React, { useContext, useEffect, useState } from "react";
 import { AppContext } from "../../context/AppContext";
+import { assets } from "../../assets/assets";
 import axios from "axios";
-import { toast } from "react-toastify"; // Using toastify for consistency with your AppContext
+import { toast } from "react-toastify";
 import Loading from "../../components/students/Loading";
 
 const StudentsEnrolled = () => {
@@ -21,7 +22,7 @@ const StudentsEnrolled = () => {
       );
 
       if (data.success) {
-        // Reverse shows the newest enrollments at the top
+        
         setEnrolledStudents(data.enrolledStudents.reverse());
       } else {
         toast.error(data.message);
@@ -68,10 +69,12 @@ const StudentsEnrolled = () => {
                     </td>
 
                     <td className="px-4 py-4 flex items-center space-x-3">
+                     
                       <img
-                        src={item.student.imageUrl}
+                        src={item.student.image || item.student.imageUrl || assets.profile_img}
                         alt={item.student.name}
                         className="w-9 h-9 rounded-full object-cover border border-gray-100"
+                        onError={(e) => { e.target.src = assets.profile_img }}
                       />
                       <span className="truncate font-medium text-gray-800">
                         {item.student.name}

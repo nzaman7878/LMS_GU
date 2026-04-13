@@ -38,8 +38,8 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen p-4 md:p-8 space-y-8 bg-gray-50/50">
       
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-     
         <div className="flex items-center gap-4 p-6 bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow">
           <img src={assets.patients_icon} className="w-12" alt="Enrollments" />
           <div>
@@ -52,7 +52,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-       
         <div className="flex items-center gap-4 p-6 bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow">
           <img src={assets.appointments_icon} className="w-12" alt="Courses" />
           <div>
@@ -65,7 +64,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-       
         <div className="flex items-center gap-4 p-6 bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow">
           <img src={assets.earning_icon} className="w-12" alt="Earnings" />
           <div>
@@ -80,7 +78,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-     
+      {/* Latest Enrolments Table */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b bg-gray-50/50">
           <h2 className="text-lg font-bold text-gray-800">Latest Enrolments</h2>
@@ -99,6 +97,7 @@ const Dashboard = () => {
                 <th className="px-6 py-4 text-center w-16">#</th>
                 <th className="px-6 py-4">Student</th>
                 <th className="px-6 py-4">Course Name</th>
+               
               </tr>
             </thead>
 
@@ -112,9 +111,10 @@ const Dashboard = () => {
 
                     <td className="px-6 py-4 flex items-center gap-3">
                       <img
-                        src={item.student.imageUrl}
+                        src={item.student.image || item.student.imageUrl || assets.profile_img}
                         alt={item.student.name}
-                        className="w-10 h-10 rounded-full object-cover border border-gray-100"
+                        className="w-9 h-9 rounded-full object-cover border border-gray-100"
+                        onError={(e) => { e.target.src = assets.profile_img }}
                       />
                       <span className="font-semibold text-gray-800">
                         {item.student.name}
@@ -124,11 +124,13 @@ const Dashboard = () => {
                     <td className="px-6 py-4 font-medium text-gray-600">
                       {item.courseTitle}
                     </td>
+
+       
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="3" className="px-6 py-12 text-center text-gray-400 italic">
+                  <td colSpan="4" className="px-6 py-12 text-center text-gray-400 italic">
                     No enrollments yet. Start sharing your courses!
                   </td>
                 </tr>

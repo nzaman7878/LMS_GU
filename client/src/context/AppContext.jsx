@@ -87,10 +87,10 @@ const fetchStudentProfile = async (token) => {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    console.log("Full API Response:", data); // CHECK YOUR BROWSER CONSOLE
+
 
     if (data.success) {
-      // If your backend returns { success: true, student: {...} }
+    
       setStudent(data.student);
     } 
   } catch (error) {
@@ -100,6 +100,25 @@ const fetchStudentProfile = async (token) => {
   }
 };
 
+const registerStudent = async (name, email, password) => {
+  try {
+    const { data } = await axios.post(
+      `${backendUrl}/api/students/register`,
+      { name, email, password }
+    );
+
+    if (data.success) {
+      return { success: true };
+    }
+
+    return { success: false, message: data.message };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.response?.data?.message || error.message,
+    };
+  }
+};
 
   const loginStudent = async (email, password) => {
     try {
@@ -203,7 +222,7 @@ const loginEducator = async (email, password) => {
 
   const value = {
     student, setStudent,
-    loginStudent,updateProfile, logoutStudent,
+    loginStudent,registerStudent, updateProfile, logoutStudent,
     loginEducator,
     allCourses, fetchAllCourses,
     enrolledCourses, fetchUserEnrolledCourses,

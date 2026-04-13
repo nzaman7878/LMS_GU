@@ -17,9 +17,9 @@ const CourseDetails = () => {
   const [openSections, setOpenSections] = useState({});
   const [playerData, setPlayerData] = useState(null);
   const [isAlreadyEnrolled, setIsAlreadyEnrolled] = useState(false);
+  const [loading, setLoading] = useState(true); // ✅ local loading state
 
   const {
-    allCourses,
     calculateRating,
     calculateCourseDuration,
     calculateNoOfLectures,
@@ -30,13 +30,29 @@ const CourseDetails = () => {
     enrolledCourses,
   } = useContext(AppContext);
 
+  // ✅ Fix: Fetch full course data directly from API (not from allCourses)
+  // because getAllCourse strips courseContent
   useEffect(() => {
-    if (allCourses && allCourses.length > 0) {
-      const findCourse = allCourses.find((course) => course._id === id);
-      if (findCourse) setCourseData(findCourse);
-    }
-  }, [id, allCourses]);
+    const fetchCourse = async () => {
+      try {
+        setLoading(true);
+        const { data } = await axios.get(`${backendUrl}/api/course/${id}`);
+        if (data.success) {
+          setCourseData(data.courseData);
+        } else {
+          toast.error(data.message);
+        }
+      } catch (error) {
+        toast.error(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    if (id) fetchCourse();
+  }, [id, backendUrl]);
+
+  // Check enrollment
   useEffect(() => {
     if (enrolledCourses?.length && courseData) {
       const isEnrolled = enrolledCourses.some(
@@ -55,7 +71,7 @@ const CourseDetails = () => {
 
       const token = localStorage.getItem("studentToken");
       const { data } = await axios.post(
-        backendUrl + "/api/students/purchase",
+        `${backendUrl}/api/students/purchase`,
         { courseId: courseData._id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -82,6 +98,7 @@ const CourseDetails = () => {
     return match && match[7].length === 11 ? match[7] : "";
   };
 
+  if (loading) return <Loading />;
   if (!courseData) return <Loading />;
 
   const rating = calculateRating(courseData);
@@ -92,12 +109,12 @@ const CourseDetails = () => {
 
   return (
     <>
-      {/* Hero Background */}
-      <div className="bg-gradient-to-b from-cyan-100/70 to-white">
+      <div className="bg-gradient-to-b from-cyan-100/70 to-white min-h-screen">
         <div className="flex flex-col-reverse lg:flex-row gap-10 relative items-start justify-between px-4 sm:px-8 lg:px-20 xl:px-36 pt-20 lg:pt-28 pb-10 text-left">
 
           {/* ─── LEFT COLUMN ─── */}
           <div className="w-full lg:max-w-xl z-10 text-gray-500">
+
             <h1 className="text-3xl font-semibold text-gray-800">
               {courseData?.courseTitle}
             </h1>
@@ -110,17 +127,13 @@ const CourseDetails = () => {
             />
 
             {/* Rating Row */}
-            <div className="flex items-center gap-2 pt-3 text-sm">
-              <p className="text-gray-700 font-medium">{rating}</p>
+            <div className="flex flex-wrap items-center gap-2 pt-3 text-sm">
+              <p className="text-yellow-600 font-semibold">{rating}</p>
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
                   <img
                     key={i}
-                    src={
-                      i < Math.floor(rating)
-                        ? assets.star
-                        : assets.star_blank
-                    }
+                    src={i < Math.floor(rating) ? assets.star : assets.star_blank}
                     alt="star"
                     className="w-4 h-4"
                   />
@@ -144,96 +157,136 @@ const CourseDetails = () => {
                 Course Structure
               </h2>
 
-              <div className="pt-5 space-y-2">
-                {courseData?.courseContent?.map((chapter, index) => (
-                  <div
-                    key={index}
-                    className="border border-gray-300 bg-white rounded overflow-hidden"
-                  >
-                    {/* Chapter Header */}
+              {/* Summary */}
+              <p className="text-sm text-gray-500 pt-1">
+                {courseData?.courseContent?.length} sections &bull;{" "}
+                {calculateNoOfLectures(courseData)} lectures &bull;{" "}
+                {calculateCourseDuration(courseData)} total length
+              </p>
+
+              <div className="pt-4 space-y-2">
+                {courseData?.courseContent?.length > 0 ? (
+                  courseData.courseContent.map((chapter, index) => (
                     <div
-                      className="flex justify-between items-center px-4 py-3 cursor-pointer select-none hover:bg-gray-50 transition-colors"
-                      onClick={() => toggleSection(index)}
+                      key={index}
+                      className="border border-gray-300 bg-white rounded overflow-hidden"
                     >
-                      <div className="flex items-center gap-2">
-                        <img
-                          src={assets.arrow_icon}
-                          alt="arrow"
-                          className={`w-3 transition-transform duration-300 ${
-                            openSections[index] ? "rotate-90" : ""
-                          }`}
-                        />
-                        <p className="font-medium text-gray-800">
-                          {chapter.chapterTitle}
+                      {/* Chapter Header */}
+                      <div
+                        className="flex justify-between items-center px-4 py-3 cursor-pointer select-none hover:bg-gray-50 transition-colors"
+                        onClick={() => toggleSection(index)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={assets.arrow_icon}
+                            alt="arrow"
+                            className={`w-3 transition-transform duration-300 ${
+                              openSections[index] ? "rotate-90" : ""
+                            }`}
+                          />
+                          <p className="font-medium text-gray-800 text-sm">
+                            {chapter.chapterTitle}
+                          </p>
+                        </div>
+                        <p className="text-xs text-gray-500 shrink-0 ml-4">
+                          {chapter.chapterContent?.length} lectures &bull;{" "}
+                          {calculateChapterTime(chapter)}
                         </p>
                       </div>
-                      <p className="text-sm text-gray-500 shrink-0 ml-4">
-                        {chapter.chapterContent.length} lectures &bull;{" "}
-                        {calculateChapterTime(chapter)}
-                      </p>
-                    </div>
 
-                    {/* Lectures List */}
-                    <div
-                      className={`overflow-hidden transition-all duration-300 ${
-                        openSections[index] ? "max-h-[1000px]" : "max-h-0"
-                      }`}
-                    >
-                      <ul className="border-t border-gray-200">
-                        {chapter.chapterContent.map((lecture, i) => (
-                          <li
-                            key={i}
-                            className="flex justify-between items-center px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50"
-                          >
-                            {/* Play icon + title */}
-                            <div className="flex items-center gap-2">
-                              <img
-                                src={assets.play_icon}
-                                alt="play"
-                                className="w-4 h-4 opacity-70 shrink-0"
-                              />
-                              <span>{lecture.lectureTitle}</span>
-                            </div>
-
-                            {/* Preview button + duration */}
-                            <div className="flex items-center gap-3 shrink-0 ml-4">
-                              {lecture.isPreviewFree && (
-                                <button
-                                  onClick={() =>
-                                    setPlayerData({
-                                      videoId: extractVideoId(
-                                        lecture.lectureUrl
-                                      ),
-                                    })
-                                  }
-                                  className="text-blue-500 text-xs border border-blue-400 px-2 py-0.5 rounded hover:bg-blue-50 transition-colors"
-                                >
-                                  Preview
-                                </button>
-                              )}
-                              <span className="text-gray-400 text-xs">
-                                {humanizeDuration(
-                                  lecture.lectureDuration * 60 * 1000,
-                                  { units: ["h", "m"] }
+                      {/* Lectures */}
+                      <div
+                        className={`overflow-hidden transition-all duration-300 ${
+                          openSections[index] ? "max-h-[1000px]" : "max-h-0"
+                        }`}
+                      >
+                        <ul className="border-t border-gray-200 divide-y divide-gray-100">
+                          {chapter.chapterContent?.map((lecture, i) => (
+                            <li
+                              key={i}
+                              className="flex justify-between items-center px-4 py-3 text-sm"
+                            >
+                              {/* Left: icon + title */}
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                {lecture.isPreviewFree ? (
+                                  <img
+                                    src={assets.play_icon}
+                                    alt="preview"
+                                    className="w-4 h-4 shrink-0"
+                                  />
+                                ) : (
+                                  // Lock icon for paid lectures
+                                  <svg
+                                    className="w-4 h-4 shrink-0 text-gray-400"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
                                 )}
-                              </span>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
+                                <span
+                                  className={`truncate ${
+                                    lecture.isPreviewFree
+                                      ? "text-gray-700"
+                                      : "text-gray-400"
+                                  }`}
+                                >
+                                  {lecture.lectureTitle}
+                                </span>
+                              </div>
+
+                              {/* Right: Preview button + duration */}
+                              <div className="flex items-center gap-3 shrink-0 ml-4">
+                                {lecture.isPreviewFree && (
+                                  <button
+                                    onClick={() =>
+                                      setPlayerData({
+                                        // ✅ Handle both youtube and uploaded video
+                                        videoId:
+                                          lecture.videoType === "youtube"
+                                            ? extractVideoId(lecture.youtubeUrl)
+                                            : extractVideoId(lecture.videoUrl),
+                                        videoType: lecture.videoType,
+                                        videoUrl: lecture.videoUrl,
+                                      })
+                                    }
+                                    className="text-blue-500 text-xs border border-blue-400 px-2 py-0.5 rounded hover:bg-blue-50 transition-colors"
+                                  >
+                                    Preview
+                                  </button>
+                                )}
+                                <span className="text-gray-400 text-xs whitespace-nowrap">
+                                  {humanizeDuration(
+                                    lecture.lectureDuration * 60 * 1000,
+                                    { units: ["h", "m"] }
+                                  )}
+                                </span>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-400 pt-2">
+                    No course content available yet.
+                  </p>
+                )}
               </div>
             </div>
 
-            {/*COURSE DESCRIPTION */}
-            <div className="pt-10">
+            {/* ─── COURSE DESCRIPTION ─── */}
+            <div className="pt-10 pb-10">
               <h2 className="text-xl font-semibold text-gray-800">
                 Course Description
               </h2>
               <p
-                className="pt-4 text-sm leading-relaxed"
+                className="pt-4 text-sm leading-relaxed rich-text"
                 dangerouslySetInnerHTML={{
                   __html: courseData?.courseDescription,
                 }}
@@ -241,30 +294,44 @@ const CourseDetails = () => {
             </div>
           </div>
 
-          {/*RIGHT COLUMN */}
+          {/* ─── RIGHT COLUMN (sticky card) ─── */}
           <div className="w-full lg:max-w-[400px] sticky top-24 z-10">
             <div className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-200">
 
-              
+              {/* Video / Thumbnail */}
               <div className="relative w-full aspect-video bg-black">
                 {playerData ? (
-                  <YouTube
-                    videoId={playerData.videoId}
-                    opts={{
-                      width: "100%",
-                      height: "100%",
-                      playerVars: { autoplay: 1 },
-                    }}
-                    iframeClassName="absolute top-0 left-0 w-full h-full"
-                  />
+                  // ✅ Handle both youtube and uploaded video types
+                  playerData.videoType === "upload" ? (
+                    <video
+                      src={playerData.videoUrl}
+                      controls
+                      autoPlay
+                      className="absolute top-0 left-0 w-full h-full"
+                    />
+                  ) : (
+                    <YouTube
+                      videoId={playerData.videoId}
+                      opts={{
+                        width: "100%",
+                        height: "100%",
+                        playerVars: { autoplay: 1 },
+                      }}
+                      iframeClassName="absolute top-0 left-0 w-full h-full"
+                    />
+                  )
                 ) : (
                   <div
                     className="relative w-full h-full cursor-pointer group"
-                    onClick={() =>
-                      setPlayerData({
-                        videoId: extractVideoId(courseData?.coursePreviewUrl),
-                      })
-                    }
+                    onClick={() => {
+                      const previewUrl = courseData?.coursePreviewUrl;
+                      if (previewUrl) {
+                        setPlayerData({
+                          videoId: extractVideoId(previewUrl),
+                          videoType: "youtube",
+                        });
+                      }
+                    }}
                   >
                     <img
                       src={courseData?.courseThumbnail}
@@ -273,11 +340,7 @@ const CourseDetails = () => {
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="bg-black/60 p-4 rounded-full group-hover:scale-110 transition-transform">
-                        <img
-                          src={assets.play_icon}
-                          alt="play"
-                          className="w-8"
-                        />
+                        <img src={assets.play_icon} alt="play" className="w-8" />
                       </div>
                     </div>
                   </div>
@@ -285,24 +348,21 @@ const CourseDetails = () => {
               </div>
 
               <div className="p-5">
-                
+                {/* Countdown */}
                 <div className="flex items-center gap-2">
                   <img className="w-3.5" src={assets.time_left_icon} alt="" />
                   <p className="text-red-500 text-sm">
-                    <span className="font-semibold">5 days</span> left at this
-                    price!
+                    <span className="font-semibold">5 days</span> left at this price!
                   </p>
                 </div>
 
                 {/* Price */}
                 <div className="flex items-center gap-3 pt-2">
                   <p className="text-gray-800 text-3xl font-bold">
-                    {currency}
-                    {discountedPrice}
+                    {currency}{discountedPrice}
                   </p>
                   <p className="text-gray-400 line-through text-lg">
-                    {currency}
-                    {courseData?.coursePrice?.toFixed(2)}
+                    {currency}{courseData?.coursePrice?.toFixed(2)}
                   </p>
                   {courseData?.discount > 0 && (
                     <p className="text-green-600 text-sm font-semibold">
@@ -329,7 +389,7 @@ const CourseDetails = () => {
                   </div>
                 </div>
 
-                
+                {/* Enroll Button */}
                 <button
                   onClick={enrollCourse}
                   className="mt-5 w-full py-3 rounded-lg bg-blue-600 text-white font-semibold text-base hover:bg-blue-700 active:scale-95 transition-all"
@@ -337,7 +397,7 @@ const CourseDetails = () => {
                   {isAlreadyEnrolled ? "Go to Course →" : "Enroll Now"}
                 </button>
 
-                
+                {/* What's included */}
                 <div className="pt-5">
                   <p className="font-semibold text-gray-800 text-sm">
                     What's in the course?
@@ -353,9 +413,9 @@ const CourseDetails = () => {
               </div>
             </div>
           </div>
+
         </div>
       </div>
-
       <Footer />
     </>
   );

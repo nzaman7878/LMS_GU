@@ -200,7 +200,7 @@ const handleSubmit = async (e) => {
   }
 };
 
-if (!isEducator) {
+if (isEducator) {
   return (
     <div className="h-screen overflow-y-auto flex flex-col items-start md:p-8 p-4 bg-gray-50 w-full">
       <form

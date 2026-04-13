@@ -81,22 +81,24 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
-  const fetchStudentProfile = async (token) => {
-    try {
-      const { data } = await axios.get(`${backendUrl}/api/students/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (data.success) {
-        setStudent(data.student);
-      }
-    } catch (error) {
-      localStorage.removeItem("studentToken");
-      setStudent(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchStudentProfile = async (token) => {
+  try {
+    const { data } = await axios.get(`${backendUrl}/api/students/profile`, { // Verify this URL!
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
+    console.log("Full API Response:", data); // CHECK YOUR BROWSER CONSOLE
+
+    if (data.success) {
+      // If your backend returns { success: true, student: {...} }
+      setStudent(data.student);
+    } 
+  } catch (error) {
+    console.error("Profile Fetch Error:", error.response?.data?.message || error.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
 
   const loginStudent = async (email, password) => {
@@ -120,7 +122,37 @@ const getToken = async () => {
   return localStorage.getItem("educatorToken") || localStorage.getItem("studentToken");
 };
 
+const updateProfile = async (formData) => {
+  try {
+    const token = localStorage.getItem("studentToken");
 
+    if (!token) {
+      return { success: false, message: "Session expired. Please login again." };
+    }
+
+    const { data } = await axios.put(
+      `${backendUrl}/api/students/update-profile`,
+      formData, 
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (data.success) {
+      await fetchStudentProfile(token); 
+      return { success: true };
+    }
+
+    return { success: false, message: data.message };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.response?.data?.message || error.message,
+    };
+  }
+};
 
   const logoutStudent = () => {
     localStorage.removeItem("studentToken");
@@ -171,7 +203,7 @@ const loginEducator = async (email, password) => {
 
   const value = {
     student, setStudent,
-    loginStudent, logoutStudent,
+    loginStudent,updateProfile, logoutStudent,
     loginEducator,
     allCourses, fetchAllCourses,
     enrolledCourses, fetchUserEnrolledCourses,

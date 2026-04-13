@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { CourseProgress } from "../models/courseProgressModel.js";
 
+import cloudinary from "../config/cloudinary.js";
 
 import { Purchase } from "../models/purchaseModel.js";
 
@@ -60,7 +61,7 @@ const registerStudent = async (req, res) => {
 };
 
 
-// ✅ Login Student
+//  Login Student
 const loginStudent = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -105,7 +106,61 @@ const loginStudent = async (req, res) => {
   }
 };
 
+// Update Student Profile
+const updateStudentProfile = async (req, res) => {
+  try {
+    const studentId = req.auth.id || req.auth.userId;
 
+    const {
+      name,
+      gender,
+      mobile,
+      university,
+      education,
+      address,
+    } = req.body;
+
+    const updateData = {};
+
+    if (name && name !== "undefined") updateData.name = name;
+
+    if (gender && gender !== "undefined") updateData.gender = gender;
+
+    if (mobile && mobile !== "undefined") updateData.mobile = mobile;
+
+    if (university && university !== "undefined")
+      updateData.university = university;
+
+    if (education && education !== "undefined")
+      updateData.education = education;
+
+    if (address && address !== "undefined")
+      updateData.address = address;
+
+   
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path);
+      updateData.image = result.secure_url;
+    }
+
+    const updatedStudent = await studentModel.findByIdAndUpdate(
+      studentId,
+      { $set: updateData },
+      { new: true }
+    ).select("-password");
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      student: updatedStudent,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 // Get Student Data
 const getStudentData = async (req, res) => {
   try {
@@ -203,7 +258,7 @@ const purchaseCourse = async (req, res) => {
       amount,
     });
 
-    console.log(" Purchase Created:", newPurchase._id);
+   
 
    
     const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -233,7 +288,7 @@ const purchaseCourse = async (req, res) => {
       },
     });
 
-    console.log(" Stripe Session Created:", session.id);
+   
 
     res.json({
       success: true,
@@ -390,4 +445,5 @@ export {
   updateUserCourseProgress,
   getUserCourseProgress,
   addUserRating,
+  updateStudentProfile,
 };

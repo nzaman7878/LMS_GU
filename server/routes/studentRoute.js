@@ -1,4 +1,5 @@
 import express from "express";
+import upload from "../middleware/multer.js";
 import {
   registerStudent,
   loginStudent,
@@ -8,6 +9,7 @@ import {
   updateUserCourseProgress,
   getUserCourseProgress,
   addUserRating ,
+  updateStudentProfile ,
 } from "../controllers/studentController.js";
 
 import authStudent from "../middleware/authStudent.js";
@@ -30,5 +32,11 @@ studentRouter.post("/purchase", authStudent, purchaseCourse);
 studentRouter.post("/update-course-progress", authStudent, updateUserCourseProgress);
 studentRouter.post("/get-course-progress", authStudent, getUserCourseProgress);
 studentRouter.post("/add-rating", authStudent, addUserRating);
+studentRouter.put(
+  "/update-profile", 
+  authStudent, 
+  upload.single('image'), 
+  updateStudentProfile
+);
 
 export default studentRouter;

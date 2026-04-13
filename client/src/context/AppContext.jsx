@@ -129,6 +129,25 @@ const getToken = async () => {
     navigate("/");
   };
 
+const loginEducator = async (email, password) => {
+  try {
+    const { data } = await axios.post(`${backendUrl}/api/educator/login`, { email, password });
+    
+    if (data.success) {
+    
+      localStorage.setItem("educatorToken", data.eToken); 
+      localStorage.setItem("educatorData", JSON.stringify(data.educator));
+      
+      setIsEducator(true);
+      setEducatorData(data.educator);
+      
+      return { success: true };
+    }
+    return { success: false, message: data.message };
+  } catch (error) {
+    return { success: false, message: error.response?.data?.message || "Login failed" };
+  }
+};
 
 
   useEffect(() => {
@@ -153,11 +172,12 @@ const getToken = async () => {
   const value = {
     student, setStudent,
     loginStudent, logoutStudent,
+    loginEducator,
     allCourses, fetchAllCourses,
     enrolledCourses, fetchUserEnrolledCourses,
     currency, backendUrl, navigate, loading,
     calculateRating, calculateChapterTime, calculateCourseDuration, calculateNoOfLectures,
-    isEducator, educatorData, setIsEducator, setEducatorData,getToken,
+    isEducator, educatorData, setIsEducator, setEducatorData,getToken, 
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

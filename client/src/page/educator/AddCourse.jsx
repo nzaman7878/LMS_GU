@@ -3,7 +3,7 @@ import uniqid from "uniqid";
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import axios from "axios";
-import toast from "react-hot-toast";
+import { toast } from "react-toastify";
 import { AppContext } from "../../context/AppContext";
 
 const AddCourse = () => {
@@ -116,64 +116,91 @@ const handleSubmit = async (e) => {
   e.preventDefault();
   try {
     if (!image) return toast.error("Thumbnail Not Selected");
+    if (chapters.length === 0) return toast.error("Add at least one chapter");
+
+    const token = localStorage.getItem("educatorToken");
+    if (!token) return toast.error("User not authenticated. Please login again.");
 
     const formData = new FormData();
 
-    // 1. Prepare clean course metadata (removing File objects from the JSON)
     const courseData = {
       courseTitle,
       courseDescription: quillRef.current?.root?.innerHTML || "",
       coursePrice: Number(coursePrice),
       discount: Number(discount),
-      courseContent: chapters.map(chapter => ({
-        ...chapter,
-        chapterContent: chapter.chapterContent.map(lecture => ({
-          ...lecture,
-          videoFile: lecture.videoFile ? "present" : null, // Marker for backend
-          resourceFile: lecture.resourceFile ? "present" : null
-        }))
+      courseContent: chapters.map((chapter) => ({
+        chapterId: chapter.chapterId,
+        chapterTitle: chapter.chapterTitle,
+        chapterOrder: chapter.chapterOrder,
+        chapterContent: chapter.chapterContent.map((lecture) => {
+          const videoType = lecture.videoFile ? "upload" : "youtube";
+
+          return {
+            lectureId: lecture.lectureId,
+            lectureTitle: lecture.lectureTitle,
+            lectureDuration: lecture.lectureDuration,
+            isPreviewFree: lecture.isPreviewFree,
+            videoType,
+           
+            youtubeUrl: videoType === "youtube" ? lecture.lectureUrl : "",
+            videoFileName: videoType === "upload" ? `video_${lecture.lectureId}` : null,
+            resources: lecture.resourceFile
+              ? [{ title: "Resource File", fileName: `resource_${lecture.lectureId}` }]
+              : [],
+          };
+         
+        }),
       })),
     };
 
     formData.append("courseData", JSON.stringify(courseData));
-    formData.append("image", image);
+    formData.append("thumbnail", image);
 
-    // 2. Append lecture files with unique keys
     chapters.forEach((chapter) => {
       chapter.chapterContent.forEach((lecture) => {
         if (lecture.videoFile) {
-         
           formData.append(`video_${lecture.lectureId}`, lecture.videoFile);
         }
         if (lecture.resourceFile) {
-         
           formData.append(`resource_${lecture.lectureId}`, lecture.resourceFile);
         }
       });
     });
 
-    const token = localStorage.getItem("educatorToken");
+    const loadingToast = toast.loading("Uploading content to Cloudinary...");
 
     const { data } = await axios.post(
-      `${backendUrl}/api/educator/add-course`,
+      `${backendUrl}/api/course/create`,
       formData,
-      { headers: { Authorization: `Bearer ${token}` } }
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+       
+        },
+      }
     );
+
+    toast.dismiss(loadingToast);
 
     if (data.success) {
       toast.success(data.message);
-      // Reset logic...
       setCourseTitle("");
+      setCoursePrice(0);
+      setDiscount(0);
       setChapters([]);
       setImage(null);
       if (quillRef.current) quillRef.current.root.innerHTML = "";
+    } else {
+      toast.error(data.message); 
     }
   } catch (error) {
+    toast.dismiss();
+    console.error("Submit error:", error); 
     toast.error(error.response?.data?.message || error.message);
   }
 };
- if (!isEducator) 
- {
+
+if (!isEducator) {
   return (
     <div className="h-screen overflow-y-auto flex flex-col items-start md:p-8 p-4 bg-gray-50 w-full">
       <form
@@ -312,7 +339,7 @@ const handleSubmit = async (e) => {
           ))}
         </div>
 
-        <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-md shadow-lg transition-all mt-4">
+        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-md shadow-lg transition-all mt-4">
           PUBLISH COURSE
         </button>
       </form>
@@ -415,7 +442,8 @@ const handleSubmit = async (e) => {
       )}
     </div>
   );
- }
+}
+ 
 };
 
 export default AddCourse;

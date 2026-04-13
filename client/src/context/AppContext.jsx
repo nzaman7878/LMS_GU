@@ -114,6 +114,14 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
+
+const getToken = async () => {
+ 
+  return localStorage.getItem("educatorToken") || localStorage.getItem("studentToken");
+};
+
+
+
   const logoutStudent = () => {
     localStorage.removeItem("studentToken");
     setStudent(null);
@@ -149,7 +157,7 @@ export const AppContextProvider = ({ children }) => {
     enrolledCourses, fetchUserEnrolledCourses,
     currency, backendUrl, navigate, loading,
     calculateRating, calculateChapterTime, calculateCourseDuration, calculateNoOfLectures,
-    isEducator, educatorData, setIsEducator, setEducatorData
+    isEducator, educatorData, setIsEducator, setEducatorData,getToken,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

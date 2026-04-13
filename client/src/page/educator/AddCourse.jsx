@@ -1,10 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState ,useContext, } from "react";
 import uniqid from "uniqid";
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
-import { assets } from "../../assets/assets.js";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { AppContext } from "../../context/AppContext";
 
 const AddCourse = () => {
+const { backendUrl, isEducator } = useContext(AppContext);
   const quillRef = useRef(null);
   const editorRef = useRef(null);
 
@@ -109,26 +112,68 @@ const AddCourse = () => {
     );
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const description = quillRef.current.root.innerHTML;
-      const courseData = {
-        courseTitle,
-        description,
-        coursePrice: Number(coursePrice),
-        discount: Number(discount),
-        image,
-        chapters,
-      };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    if (!image) return toast.error("Thumbnail Not Selected");
 
-      console.log("FINAL COURSE DATA 👉", courseData);
-      alert("Course Added Successfully 🚀");
-    } catch (error) {
-      alert("Error adding course");
+    const formData = new FormData();
+
+    // 1. Prepare clean course metadata (removing File objects from the JSON)
+    const courseData = {
+      courseTitle,
+      courseDescription: quillRef.current?.root?.innerHTML || "",
+      coursePrice: Number(coursePrice),
+      discount: Number(discount),
+      courseContent: chapters.map(chapter => ({
+        ...chapter,
+        chapterContent: chapter.chapterContent.map(lecture => ({
+          ...lecture,
+          videoFile: lecture.videoFile ? "present" : null, // Marker for backend
+          resourceFile: lecture.resourceFile ? "present" : null
+        }))
+      })),
+    };
+
+    formData.append("courseData", JSON.stringify(courseData));
+    formData.append("image", image);
+
+    // 2. Append lecture files with unique keys
+    chapters.forEach((chapter) => {
+      chapter.chapterContent.forEach((lecture) => {
+        if (lecture.videoFile) {
+         
+          formData.append(`video_${lecture.lectureId}`, lecture.videoFile);
+        }
+        if (lecture.resourceFile) {
+         
+          formData.append(`resource_${lecture.lectureId}`, lecture.resourceFile);
+        }
+      });
+    });
+
+    const token = localStorage.getItem("educatorToken");
+
+    const { data } = await axios.post(
+      `${backendUrl}/api/educator/add-course`,
+      formData,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (data.success) {
+      toast.success(data.message);
+      // Reset logic...
+      setCourseTitle("");
+      setChapters([]);
+      setImage(null);
+      if (quillRef.current) quillRef.current.root.innerHTML = "";
     }
-  };
-
+  } catch (error) {
+    toast.error(error.response?.data?.message || error.message);
+  }
+};
+ if (!isEducator) 
+ {
   return (
     <div className="h-screen overflow-y-auto flex flex-col items-start md:p-8 p-4 bg-gray-50 w-full">
       <form
@@ -370,6 +415,7 @@ const AddCourse = () => {
       )}
     </div>
   );
+ }
 };
 
 export default AddCourse;

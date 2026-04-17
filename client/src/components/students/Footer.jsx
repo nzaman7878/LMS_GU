@@ -1,5 +1,6 @@
-import React from 'react'
+
 import { assets } from '../../assets/assets.js'
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
@@ -35,6 +36,14 @@ const Footer = () => {
   </h2>
 
   <ul className="space-y-2 text-sm text-white/70 text-center md:text-left">
+  <li>
+  <Link 
+    to="/admin-login" 
+    className="hover:text-white transition"
+  >
+    Admin Login
+  </Link>
+</li>
     <li><a className="hover:text-white transition" href="#">Home</a></li>
     <li><a className="hover:text-white transition" href="#">About Gauhati University</a></li>
     <li><a className="hover:text-white transition" href="#">Courses</a></li>

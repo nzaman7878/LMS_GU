@@ -17,6 +17,7 @@ import AddCourse from './page/educator/AddCourse'
 import MyCourses from './page/educator/MyCourses'
 import StudentsEnrolled from './page/educator/StudentsEnrolled'
 
+import AdminLogin from './page/admin/AdminLogin'
 import Admin from './page/admin/Admin'
 import AdminDashboard from './page/admin/AdminDashboard'
 import ManageCourses from './page/admin/ManageCourses'
@@ -29,6 +30,7 @@ import StudentDashboard from './page/student/StudentDashboard'
 import { ToastContainer } from 'react-toastify';
 
 import "quill/dist/quill.snow.css";
+
 
 function App() {
 
@@ -65,7 +67,7 @@ function App() {
           <Route path='students-enrolled' element={<StudentsEnrolled />} />
         </Route>
 
-     
+       <Route path='/admin-login' element={<AdminLogin />} />
         <Route path='/admin' element={<Admin />} >
           <Route index element={<AdminDashboard />} />
           <Route path='manage-courses' element={<ManageCourses />} />

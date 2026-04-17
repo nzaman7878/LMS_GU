@@ -50,6 +50,25 @@ export const AppContextProvider = ({ children }) => {
   };
 
 
+const loginAdmin = async (email, password) => {
+  try {
+    const { data } = await axios.post(`${backendUrl}/api/admin/login`, { email, password });
+    
+    if (data.success) {
+    
+      localStorage.setItem("adminToken", data.token); 
+      return { success: true };
+    }
+    return { success: false, message: data.message };
+  } catch (error) {
+    return { 
+      success: false, 
+      message: error.response?.data?.message || "Admin login failed" 
+    };
+  }
+};
+
+
 
   const fetchAllCourses = async () => {
     try {
@@ -221,6 +240,7 @@ const loginEducator = async (email, password) => {
   }, []);
 
   const value = {
+    loginAdmin,
     student, setStudent,
     loginStudent,registerStudent, updateProfile, logoutStudent,
     loginEducator,

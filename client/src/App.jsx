@@ -20,9 +20,10 @@ import StudentsEnrolled from './page/educator/StudentsEnrolled'
 import AdminLogin from './page/admin/AdminLogin'
 import Admin from './page/admin/Admin'
 import AdminDashboard from './page/admin/AdminDashboard'
+import AddEducators from './page/admin/AddEducators'
 import ManageCourses from './page/admin/ManageCourses'
 import ManageStudents from './page/admin/ManageStudents'
-import ManageTeachers from './page/admin/ManageTeachers'
+import ManageEducators from './page/admin/ManageEducators'
 
 import Navbar from './components/students/Navbar'
 import StudentLogin from './page/student/StudentLogin'
@@ -70,9 +71,10 @@ function App() {
        <Route path='/admin-login' element={<AdminLogin />} />
         <Route path='/admin' element={<Admin />} >
           <Route index element={<AdminDashboard />} />
+           <Route path='add-educators' element={<AddEducators />} />
           <Route path='manage-courses' element={<ManageCourses />} />
           <Route path='manage-students' element={<ManageStudents />} />
-          <Route path='manage-teachers' element={<ManageTeachers />} />
+          <Route path='manage-educators' element={<ManageEducators />} />
         </Route>
 
         <Route path='*' element={<h1>404 Not Found</h1>} />

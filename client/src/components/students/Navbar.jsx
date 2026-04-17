@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { assets } from "../../assets/assets";
 import { useContext, useState } from "react";
 import { AppContext } from "../../context/AppContext";
+import { toast } from "react-toastify";
 
 const Navbar = () => {
   const location = useLocation();
@@ -10,21 +11,24 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
+
+  const adminToken = localStorage.getItem('adminToken');
+
   const isCourseListPage = location.pathname === "/courses";
+
+  const adminLogout = () => {
+    localStorage.removeItem('adminToken');
+    toast.success("Admin Logged Out");
+    navigate('/');
+  };
 
   const navLinks = [
     { name: "Home", path: "/" },
-
     {
       name: student ? "My Courses" : "Courses",
       path: student ? "/my-enrollments" : "/course-list",
     },
-
-  
-    ...(student
-      ? [{ name: "Dashboard", path: "/student/dashboard" }]
-      : []),
-
+    ...(student ? [{ name: "Dashboard", path: "/student/dashboard" }] : []),
     { name: "About", path: "/about" },
     { name: "Contact", path: "/contact" },
   ];
@@ -36,8 +40,7 @@ const Navbar = () => {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-
-    
+        
         <img
           src={assets.logo}
           alt="logo"
@@ -60,7 +63,15 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-4 relative">
-          {!student ? (
+          
+          {adminToken ? (
+            <button
+              onClick={adminLogout}
+              className="bg-red-500 hover:bg-red-600 hidden md:block text-white px-5 py-2 rounded-full transition text-sm font-medium"
+            >
+              Logout
+            </button>
+          ) : !student ? (
             <button
               onClick={() => navigate("/student/login")}
               className="bg-blue-600 hover:bg-blue-700 hidden md:block text-white px-5 py-2 rounded-full transition text-sm font-medium"
@@ -69,7 +80,6 @@ const Navbar = () => {
             </button>
           ) : (
             <div className="relative">
-             
               <img
                 src={student?.image || assets.profile_img}
                 alt="profile"
@@ -79,34 +89,11 @@ const Navbar = () => {
 
               {profileOpen && (
                 <div className="absolute right-0 mt-3 w-52 bg-white rounded-lg shadow-lg border text-sm">
-
-                 
-                  <Link
-                    to="/student/dashboard"
-                    className="block px-4 py-3 hover:bg-gray-100"
-                  >
-                    Dashboard
-                  </Link>
-
-                  <Link
-                    to="/my-enrollments"
-                    className="block px-4 py-3 hover:bg-gray-100"
-                  >
-                    My Courses
-                  </Link>
-
-                  <Link
-                    to="/my-profile"
-                    className="block px-4 py-3 hover:bg-gray-100"
-                  >
-                    My Profile
-                  </Link>
-
-                  {/* LOGOUT */}
+                  <Link to="/student/dashboard" className="block px-4 py-3 hover:bg-gray-100">Dashboard</Link>
+                  <Link to="/my-enrollments" className="block px-4 py-3 hover:bg-gray-100">My Courses</Link>
+                  <Link to="/my-profile" className="block px-4 py-3 hover:bg-gray-100">My Profile</Link>
                   <button
-                    onClick={() => {
-                      logoutStudent(); 
-                    }}
+                    onClick={() => logoutStudent()}
                     className="w-full text-left px-4 py-3 text-red-500 hover:bg-gray-100"
                   >
                     Logout
@@ -126,7 +113,7 @@ const Navbar = () => {
         </div>
       </div>
 
-
+      {/* Mobile Menu */}
       {menuOpen && (
         <div className="md:hidden bg-cyan-100/70 border-t border-gray-300 px-6 py-4 space-y-4 text-gray-700 font-medium">
           {navLinks.map((link) => (
@@ -140,7 +127,14 @@ const Navbar = () => {
             </Link>
           ))}
 
-          {!student && (
+          {adminToken ? (
+             <button
+              onClick={adminLogout}
+              className="w-full bg-red-500 text-white py-2 rounded-lg"
+            >
+              Admin Logout
+            </button>
+          ) : !student && (
             <button
               onClick={() => navigate("/student/login")}
               className="w-full bg-blue-600 text-white py-2 rounded-lg"

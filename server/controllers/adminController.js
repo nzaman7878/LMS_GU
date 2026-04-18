@@ -3,78 +3,6 @@ import educatorModel from "../models/educatorModel.js";
 import bcrypt from "bcrypt";
 import Admin from "../models/adminModel.js";
 
-const addEducator = async (req, res) => {
-  try {
-    const {
-      name,
-      email,
-      password,
-      subject,
-      qualification,
-      experience,
-      about,
-    } = req.body;
-
-   
-    if (!name || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Name, Email, and Password are required",
-      });
-    }
-
-
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "Image is required",
-      });
-    }
-
-    const image = req.file.filename;
-
-    const existingEducator = await educatorModel.findOne({ email });
-
-    if (existingEducator) {
-      return res.status(400).json({
-        success: false,
-        message: "Educator already exists",
-      });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-   
-    const newEducator = new educatorModel({
-      name,
-      email,
-      password: hashedPassword,
-      image,
-      subject,
-      qualification,
-      experience,
-      about,
-    });
-
-    await newEducator.save();
-
-    res.status(201).json({
-      success: true,
-      message: "Educator added successfully",
-      educator: newEducator,
-    });
-
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-
  const registerAdmin = async (req, res) => {
 
   try {
@@ -161,4 +89,142 @@ const addEducator = async (req, res) => {
   }
 };
 
-export {registerAdmin, loginAdmin, addEducator};
+
+const addEducator = async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      password,
+      subject,
+      qualification,
+      experience,
+      about,
+    } = req.body;
+
+   
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, Email, and Password are required",
+      });
+    }
+
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Image is required",
+      });
+    }
+
+    const image = req.file.filename;
+
+    const existingEducator = await educatorModel.findOne({ email });
+
+    if (existingEducator) {
+      return res.status(400).json({
+        success: false,
+        message: "Educator already exists",
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+   
+    const newEducator = new educatorModel({
+      name,
+      email,
+      password: hashedPassword,
+      image,
+      subject,
+      qualification,
+      experience,
+      about,
+    });
+
+    await newEducator.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Educator added successfully",
+      educator: newEducator,
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+ const getAllEducators = async (req, res) => {
+    try {
+        
+        const educators = await educatorModel.find({}).select('-password');
+        res.json({ success: true, educators });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const updateEducator = async (req, res) => {
+    try {
+        const { userId, name, email, password, subject, qualification, experience, about } = req.body;
+        
+      
+        const updateData = {
+            name,
+            email,
+            subject,
+            qualification,
+            experience,
+            about
+        };
+
+       
+        if (req.file) {
+            updateData.image = req.file.filename;
+        }
+
+       
+        if (password && password.length > 0) {
+            const salt = await bcrypt.genSalt(10);
+            updateData.password = await bcrypt.hash(password, salt);
+        }
+
+        const updatedEducator = await educatorModel.findByIdAndUpdate(
+            userId, 
+            updateData, 
+            { new: true } 
+        );
+
+        if (!updatedEducator) {
+            return res.status(404).json({ success: false, message: "Educator not found" });
+        }
+
+        res.json({ 
+            success: true, 
+            message: "Educator updated successfully", 
+            educator: updatedEducator 
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+const deleteEducator = async (req, res) => {
+    try {
+        const { userId } = req.body;
+        await educatorModel.findByIdAndDelete(userId);
+        res.json({ success: true, message: "Educator Removed Successfully" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export {registerAdmin, loginAdmin, addEducator , getAllEducators , updateEducator, deleteEducator };

@@ -228,10 +228,15 @@ const deleteEducator = async (req, res) => {
     }
 };
 
-const getAllStudents = async (req, res) => {
+
+ const getAllStudents = async (req, res) => {
     try {
-        
-        const students = await studentModel.find({}).select("-password");
+        const students = await studentModel.find({})
+            .select("-password")
+            .populate({
+                path: 'enrolledCourses',
+                select: 'courseTitle' 
+            });
         
         res.json({ success: true, students });
     } catch (error) {

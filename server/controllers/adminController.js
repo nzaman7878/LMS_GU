@@ -74,6 +74,7 @@ const addEducator = async (req, res) => {
   }
 };
 
+
  const registerAdmin = async (req, res) => {
 
   try {

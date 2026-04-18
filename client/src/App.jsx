@@ -72,6 +72,7 @@ function App() {
         <Route path='/admin' element={<Admin />} >
           <Route index element={<AdminDashboard />} />
            <Route path='add-educators' element={<AddEducators />} />
+           <Route path='edit-educator/:id' element={<AddEducators />} />
           <Route path='manage-courses' element={<ManageCourses />} />
           <Route path='manage-students' element={<ManageStudents />} />
           <Route path='manage-educators' element={<ManageEducators />} />

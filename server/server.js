@@ -1,8 +1,8 @@
+import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
 
-import express from "express";
 import connectDB from "./config/db.js";
 
 import educatorRoute from "./routes/educatorRoute.js";
@@ -16,10 +16,11 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 connectDB();
+
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    process.env.CLIENT_URL  
+    process.env.CLIENT_URL
   ],
   credentials: true,
 }));
@@ -30,9 +31,10 @@ app.post(
   stripeWebhooks
 );
 
-
 app.use(express.json());
 
+
+app.use("/images", express.static("uploads"));
 
 app.use("/api/admin", adminRoute);
 app.use("/api/educator", educatorRoute);

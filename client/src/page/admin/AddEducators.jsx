@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom'; // Import this
 import { useAppContext } from '../../context/AppContext';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { assets } from '../../assets/assets';
 
 const AddEducators = () => {
-  const { backendUrl } = useAppContext();
-  
+  const { backendUrl, navigate } = useAppContext();
+  const { id } = useParams(); // Get ID from URL
+  const isEditMode = !!id;
+
   const [image, setImage] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -17,40 +20,65 @@ const AddEducators = () => {
   const [about, setAbout] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Fetch existing data if in Edit Mode
+  useEffect(() => {
+    if (isEditMode) {
+      const fetchEducatorData = async () => {
+        try {
+          const token = localStorage.getItem('adminToken');
+          const { data } = await axios.get(`${backendUrl}/api/admin/all-educators`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          if (data.success) {
+            const educator = data.educators.find(item => item._id === id);
+            if (educator) {
+              setName(educator.name);
+              setEmail(educator.email);
+              setSubject(educator.subject);
+              setQualification(educator.qualification);
+              setExperience(educator.experience);
+              setAbout(educator.about);
+              // Note: Password is left empty for security/optional update
+            }
+          }
+        } catch (error) {
+          toast.error("Failed to load educator data");
+        }
+      };
+      fetchEducatorData();
+    }
+  }, [id, isEditMode, backendUrl]);
+
   const onSubmitHandler = async (e) => {
     e.preventDefault();
-    if (!image) return toast.error("Please select an image");
-    
     setLoading(true);
 
     try {
       const formData = new FormData();
-      formData.append('image', image);
+      if (image) formData.append('image', image);
       formData.append('name', name);
       formData.append('email', email);
-      formData.append('password', password);
+      formData.append('password', password); // Optional in edit mode
       formData.append('subject', subject);
       formData.append('qualification', qualification);
       formData.append('experience', experience);
       formData.append('about', about);
+      
+      if (isEditMode) formData.append('userId', id);
 
       const token = localStorage.getItem('adminToken');
-      const { data } = await axios.post(
-        `${backendUrl}/api/admin/addEducator`, 
-        formData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      
+      // Determine if we call Add or Update API
+      const endpoint = isEditMode ? '/api/admin/update-educator' : '/api/admin/add-educator';
+      
+      const { data } = await axios.post(`${backendUrl}${endpoint}`, formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
       if (data.success) {
         toast.success(data.message);
-       
-        setImage(false);
-        setName('');
-        setEmail('');
-        setPassword('');
-        setSubject('');
-        setQualification('');
-        setAbout('');
+        navigate('/admin/manage-educators'); // Go back to list
       } else {
         toast.error(data.message);
       }
@@ -61,11 +89,16 @@ const AddEducators = () => {
     }
   };
 
-  return (
+
+ return (
     <form onSubmit={onSubmitHandler} className='m-5 w-full max-w-4xl'>
-      <h2 className='text-2xl font-bold mb-6 text-gray-800'>Add New Educator</h2>
+      <h2 className='text-2xl font-bold mb-6 text-gray-800'>
+        {isEditMode ? 'Edit Educator' : 'Add New Educator'}
+      </h2>
       
       <div className='bg-white p-8 border rounded-xl shadow-sm'>
+        
+ <div className='bg-white p-8 border rounded-xl shadow-sm'>
         
         <div className='flex items-center gap-4 mb-8 text-gray-500'>
           <label htmlFor="educator-img">
@@ -120,12 +153,15 @@ const AddEducators = () => {
           </div>
         </div>
 
+
+      </div>
+        
         <button 
           type="submit" 
           disabled={loading}
           className='bg-indigo-600 w-full md:w-48 mt-8 text-white px-10 py-3 rounded-full hover:bg-indigo-700 transition-all font-bold'
         >
-          {loading ? "Adding..." : "Add Educator"}
+          {loading ? "Processing..." : (isEditMode ? "Update Educator" : "Add Educator")}
         </button>
       </div>
     </form>

@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import educatorModel from "../models/educatorModel.js";
 import bcrypt from "bcrypt";
 import Admin from "../models/adminModel.js";
+import studentModel from "../models/studentModel.js";
 
  const registerAdmin = async (req, res) => {
 
@@ -227,4 +228,68 @@ const deleteEducator = async (req, res) => {
     }
 };
 
-export {registerAdmin, loginAdmin, addEducator , getAllEducators , updateEducator, deleteEducator };
+const getAllStudents = async (req, res) => {
+    try {
+        
+        const students = await studentModel.find({}).select("-password");
+        
+        res.json({ success: true, students });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const updateStudent = async (req, res) => {
+    try {
+        const { 
+            userId, 
+            name, 
+            email, 
+            mobile, 
+            gender, 
+            university, 
+            education, 
+            address 
+        } = req.body;
+        
+        const updatedStudent = await studentModel.findByIdAndUpdate(
+            userId, 
+            { 
+                name, 
+                email, 
+                mobile, 
+                gender, 
+                university, 
+                education, 
+                address 
+            }, 
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedStudent) {
+            return res.status(404).json({ success: false, message: "Student not found" });
+        }
+
+        res.json({ 
+            success: true, 
+            message: "Student profile updated", 
+            student: updatedStudent 
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const deleteStudent = async (req, res) => {
+    try {
+        const { userId } = req.body;
+        await studentModel.findByIdAndDelete(userId);
+        res.json({ success: true, message: "Student deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
+
+export {registerAdmin, loginAdmin, addEducator , getAllEducators , updateEducator, deleteEducator , getAllStudents , updateStudent , deleteStudent };

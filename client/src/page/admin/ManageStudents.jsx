@@ -36,8 +36,8 @@ const ManageStudents = () => {
               <td className="py-4 px-4">4 Courses</td>
               <td className="py-4 px-4">2 hours ago</td>
               <td className="py-4 px-4 text-center">
-                <button className="text-blue-600 hover:underline mr-3">View</button>
-                <button className="text-red-500 hover:underline">Block</button>
+                <button className="text-blue-600 hover:underline mr-3">Update</button>
+                <button className="text-red-500 hover:underline">Delete</button>
               </td>
             </tr>
           </tbody>

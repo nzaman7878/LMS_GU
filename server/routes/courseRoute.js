@@ -4,7 +4,8 @@ import {
   addLecture,
   addResource,
   getAllCourse,
-  getCourseId
+  getCourseId,
+  addQuiz
 
 } from "../controllers/courseController.js";
 
@@ -40,5 +41,10 @@ courseRouter.post(
 
 courseRouter.get('/all', getAllCourse);
 courseRouter.get('/:id', getCourseId);
+courseRouter.post(
+  "/:courseId/chapter/:chapterId/quiz",
+  authEducator,
+  addQuiz
+);
 
 export default courseRouter;

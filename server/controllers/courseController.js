@@ -277,3 +277,61 @@ export const getCourseId = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const addQuiz = async (req, res) => {
+  try {
+    const { courseId, chapterId } = req.params;
+    const { quizTitle, questions } = req.body;
+
+
+    if (!quizTitle || !questions || questions.length === 0) {
+      return res.json({
+        success: false,
+        message: "Quiz title and questions are required",
+      });
+    }
+
+    const course = await courseModel.findById(courseId);
+    if (!course) throw new Error("Course not found");
+
+    const chapter = course.courseContent.find(
+      (c) => c.chapterId === chapterId
+    );
+    if (!chapter) throw new Error("Chapter not found");
+
+    if (!chapter.quizzes) {
+      chapter.quizzes = [];
+    }
+
+    
+    for (let q of questions) {
+      if (
+        !q.question ||
+        !q.options ||
+        q.options.length < 4 ||
+        q.correctAnswer === undefined
+      ) {
+        throw new Error("Invalid question format");
+      }
+    }
+
+    const newQuiz = {
+      quizId: Date.now().toString(),
+      quizTitle,
+      questions,
+    };
+
+    chapter.quizzes.push(newQuiz);
+
+    await course.save();
+
+    res.json({
+      success: true,
+      message: "Quiz added successfully",
+      quiz: newQuiz,
+    });
+
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};

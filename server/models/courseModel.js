@@ -9,13 +9,30 @@ const resourceSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const questionSchema = new mongoose.Schema(
+  {
+    question: { type: String, required: true },
+    options: { type: [String], required: true },
+    correctAnswer: { type: Number, required: true }, 
+  },
+  { _id: false }
+);
+
+const quizSchema = new mongoose.Schema(
+  {
+    quizId: { type: String, required: true },
+    quizTitle: { type: String, required: true },
+    questions: { type: [questionSchema], required: true },
+  },
+  { _id: false }
+);
+
 const lectureSchema = new mongoose.Schema(
   {
     lectureId: { type: String, required: true },
     lectureTitle: { type: String, required: true },
     lectureDuration: { type: Number, required: true },
 
-    
     videoType: {
       type: String,
       enum: ["youtube", "upload"],
@@ -29,7 +46,6 @@ const lectureSchema = new mongoose.Schema(
     isPreviewFree: { type: Boolean, required: true },
     lectureOrder: { type: Number, required: true },
 
-    
     resources: [resourceSchema],
   },
   { _id: false }
@@ -40,7 +56,11 @@ const chapterSchema = new mongoose.Schema(
     chapterId: { type: String, required: true },
     chapterOrder: { type: Number, required: true },
     chapterTitle: { type: String, required: true },
+
     chapterContent: [lectureSchema],
+
+  
+    quizzes: [quizSchema],
   },
   { _id: false }
 );
@@ -66,17 +86,17 @@ const courseSchema = new mongoose.Schema(
     ],
 
     educator: {
-  type: mongoose.Schema.Types.ObjectId,
-  ref: "educator", 
-  required: true,
-},
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "educator",
+      required: true,
+    },
 
-   enrolledStudents: [
-  {
-    type: mongoose.Schema.Types.ObjectId,  
-    ref: "Student",
-  },
-],
+    enrolledStudents: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Student",
+      },
+    ],
   },
   { timestamps: true, minimize: false }
 );

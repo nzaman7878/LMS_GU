@@ -1,13 +1,14 @@
-import React, { useEffect, useRef, useState ,useContext, } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 import uniqid from "uniqid";
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import axios from "axios";
 import { toast } from "react-toastify";
+import QuizPopup from "../../components/teacher/QuizPopup"; 
 import { AppContext } from "../../context/AppContext";
 
 const AddCourse = () => {
-const { backendUrl, isEducator } = useContext(AppContext);
+  const { backendUrl, isEducator } = useContext(AppContext);
   const quillRef = useRef(null);
   const editorRef = useRef(null);
 
@@ -19,17 +20,17 @@ const { backendUrl, isEducator } = useContext(AppContext);
   const [chapters, setChapters] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [currentChapterId, setCurrentChapterId] = useState(null);
+  const [showQuizPopup, setShowQuizPopup] = useState(false);
 
   const [lectureDetails, setLectureDetails] = useState({
     lectureTitle: "",
     lectureDuration: "",
     lectureUrl: "",
     videoFile: null,
-    resourceFile: null, 
+    resourceFile: null,
     isPreviewFree: false,
   });
 
-  
   useEffect(() => {
     if (!quillRef.current && editorRef.current) {
       quillRef.current = new Quill(editorRef.current, {
@@ -49,9 +50,7 @@ const { backendUrl, isEducator } = useContext(AppContext);
           chapterContent: [],
           collapsed: false,
           chapterOrder:
-            chapters.length > 0
-              ? chapters.slice(-1)[0].chapterOrder + 1
-              : 1,
+            chapters.length > 0 ? chapters.slice(-1)[0].chapterOrder + 1 : 1,
         };
         setChapters([...chapters, newChapter]);
       }
@@ -68,7 +67,6 @@ const { backendUrl, isEducator } = useContext(AppContext);
     }
   };
 
-  
   const handleAddLecture = () => {
     if (!lectureDetails.lectureTitle || (!lectureDetails.lectureUrl && !lectureDetails.videoFile)) {
       alert("Please provide a title and either a video URL or a video file.");
@@ -87,7 +85,6 @@ const { backendUrl, isEducator } = useContext(AppContext);
       })
     );
 
-   
     setLectureDetails({
       lectureTitle: "",
       lectureDuration: "",
@@ -112,95 +109,116 @@ const { backendUrl, isEducator } = useContext(AppContext);
     );
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    if (!image) return toast.error("Thumbnail Not Selected");
-    if (chapters.length === 0) return toast.error("Add at least one chapter");
-
-    const token = localStorage.getItem("educatorToken");
-    if (!token) return toast.error("User not authenticated. Please login again.");
-
-    const formData = new FormData();
-
-    const courseData = {
-      courseTitle,
-      courseDescription: quillRef.current?.root?.innerHTML || "",
-      coursePrice: Number(coursePrice),
-      discount: Number(discount),
-      courseContent: chapters.map((chapter) => ({
-        chapterId: chapter.chapterId,
-        chapterTitle: chapter.chapterTitle,
-        chapterOrder: chapter.chapterOrder,
-        chapterContent: chapter.chapterContent.map((lecture) => {
-          const videoType = lecture.videoFile ? "upload" : "youtube";
-
+  const handleQuizDataFromPopup = (quizData) => {
+    setChapters((prev) =>
+      prev.map((chapter) => {
+        if (chapter.chapterId === currentChapterId) {
           return {
-            lectureId: lecture.lectureId,
-            lectureTitle: lecture.lectureTitle,
-            lectureDuration: lecture.lectureDuration,
-            isPreviewFree: lecture.isPreviewFree,
-            videoType,
-           
-            youtubeUrl: videoType === "youtube" ? lecture.lectureUrl : "",
-            videoFileName: videoType === "upload" ? `video_${lecture.lectureId}` : null,
-            resources: lecture.resourceFile
-              ? [{ title: "Resource File", fileName: `resource_${lecture.lectureId}` }]
-              : [],
+            ...chapter,
+            quizzes: [...(chapter.quizzes || []), { ...quizData, quizId: uniqid() }],
           };
-         
-        }),
-      })),
-    };
-
-    formData.append("courseData", JSON.stringify(courseData));
-    formData.append("thumbnail", image);
-
-    chapters.forEach((chapter) => {
-      chapter.chapterContent.forEach((lecture) => {
-        if (lecture.videoFile) {
-          formData.append(`video_${lecture.lectureId}`, lecture.videoFile);
         }
-        if (lecture.resourceFile) {
-          formData.append(`resource_${lecture.lectureId}`, lecture.resourceFile);
-        }
+        return chapter;
+      })
+    );
+    setShowQuizPopup(false);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (!image) return toast.error("Thumbnail Not Selected");
+      if (chapters.length === 0) return toast.error("Add at least one chapter");
+
+  
+      const token = localStorage.getItem("educatorToken");
+      if (!token) return toast.error("User not authenticated. Please login again.");
+
+      const formData = new FormData();
+
+      const courseData = {
+        courseTitle,
+        courseDescription: quillRef.current?.root?.innerHTML || "",
+        coursePrice: Number(coursePrice),
+        discount: Number(discount),
+        courseContent: chapters.map((chapter) => ({
+          chapterId: chapter.chapterId,
+          chapterTitle: chapter.chapterTitle,
+          chapterOrder: chapter.chapterOrder,
+          chapterContent: chapter.chapterContent.map((lecture) => {
+            const videoType = lecture.videoFile ? "upload" : "youtube";
+
+            return {
+              lectureId: lecture.lectureId,
+              lectureTitle: lecture.lectureTitle,
+              lectureDuration: lecture.lectureDuration,
+              isPreviewFree: lecture.isPreviewFree,
+              videoType,
+              youtubeUrl: videoType === "youtube" ? lecture.lectureUrl : "",
+              videoFileName: videoType === "upload" ? `video_${lecture.lectureId}` : null,
+              resources: lecture.resourceFile
+                ? [{ title: "Resource File", fileName: `resource_${lecture.lectureId}` }]
+                : [],
+            };
+          }),
+          quizzes: (chapter.quizzes || []).map((quiz) => ({
+            quizId: quiz.quizId,
+            quizTitle: quiz.quizTitle,
+            questions: quiz.questions,
+          })),
+        })),
+      };
+
+      formData.append("courseData", JSON.stringify(courseData));
+      formData.append("thumbnail", image);
+
+      chapters.forEach((chapter) => {
+        chapter.chapterContent.forEach((lecture) => {
+          if (lecture.videoFile) {
+            formData.append(`video_${lecture.lectureId}`, lecture.videoFile);
+          }
+          if (lecture.resourceFile) {
+            formData.append(`resource_${lecture.lectureId}`, lecture.resourceFile);
+          }
+        });
       });
-    });
 
-    const loadingToast = toast.loading("Uploading content to Cloudinary...");
+      const loadingToast = toast.loading("Uploading content...");
 
-    const { data } = await axios.post(
-      `${backendUrl}/api/course/create`,
-      formData,
-      {
+      const { data } = await axios.post(`${backendUrl}/api/course/create`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-       
         },
+      });
+
+      toast.dismiss(loadingToast);
+
+      if (data.success) {
+        toast.success(data.message);
+        setCourseTitle("");
+        setCoursePrice(0);
+        setDiscount(0);
+        setChapters([]);
+        setImage(null);
+        if (quillRef.current) quillRef.current.root.innerHTML = "";
+      } else {
+        toast.error(data.message);
       }
-    );
-
-    toast.dismiss(loadingToast);
-
-    if (data.success) {
-      toast.success(data.message);
-      setCourseTitle("");
-      setCoursePrice(0);
-      setDiscount(0);
-      setChapters([]);
-      setImage(null);
-      if (quillRef.current) quillRef.current.root.innerHTML = "";
-    } else {
-      toast.error(data.message); 
+    } catch (error) {
+      toast.dismiss();
+      console.error("Submit error:", error);
+      toast.error(error.response?.data?.message || error.message);
     }
-  } catch (error) {
-    toast.dismiss();
-    console.error("Submit error:", error); 
-    toast.error(error.response?.data?.message || error.message);
-  }
-};
+  };
 
-if (isEducator) {
+  if (!isEducator) {
+    return (
+      <div className="flex items-center justify-center h-screen w-full text-gray-500">
+        You do not have permission to view this page.
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen overflow-y-auto flex flex-col items-start md:p-8 p-4 bg-gray-50 w-full">
       <form
@@ -209,7 +227,6 @@ if (isEducator) {
       >
         <h2 className="text-2xl font-semibold text-gray-800">Add New Course</h2>
 
-    
         <div className="flex flex-col gap-2">
           <label className="font-medium">Course Title</label>
           <input
@@ -225,7 +242,7 @@ if (isEducator) {
         <div className="flex flex-col gap-2">
           <label className="font-medium">Course Description</label>
           <div className="bg-white">
-             <div ref={editorRef} className="min-h-[200px]"></div>
+            <div ref={editorRef} className="min-h-[200px]"></div>
           </div>
         </div>
 
@@ -244,21 +261,24 @@ if (isEducator) {
           <div className="flex flex-col gap-2">
             <label className="font-medium">Course Thumbnail</label>
             <div className="flex items-center gap-3">
-               <label className="cursor-pointer bg-blue-50 text-blue-600 px-4 py-2 rounded-md border border-blue-200 hover:bg-blue-100 transition">
-                  Upload Image
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={(e) => setImage(e.target.files[0])}
-                  />
-               </label>
-               {image && <span className="text-xs text-gray-500 truncate max-w-[150px]">{image.name}</span>}
+              <label className="cursor-pointer bg-blue-50 text-blue-600 px-4 py-2 rounded-md border border-blue-200 hover:bg-blue-100 transition">
+                Upload Image
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={(e) => setImage(e.target.files[0])}
+                />
+              </label>
+              {image && (
+                <span className="text-xs text-gray-500 truncate max-w-[150px]">
+                  {image.name}
+                </span>
+              )}
             </div>
           </div>
         </div>
 
-    
         <div className="flex flex-col gap-2 w-1/2">
           <label className="font-medium">Discount (%)</label>
           <input
@@ -306,12 +326,14 @@ if (isEducator) {
                   {chapter.chapterContent.map((lecture, i) => (
                     <div key={i} className="flex justify-between items-center bg-white p-3 rounded border">
                       <div className="flex flex-col">
-                         <span className="font-medium text-sm">{i + 1}. {lecture.lectureTitle}</span>
-                         <span className="text-xs text-gray-400">
-                           {lecture.lectureDuration} mins • {lecture.isPreviewFree ? "Free" : "Paid"}
-                           {lecture.videoFile ? " • (Video Attached)" : ""}
-                           {lecture.resourceFile ? " • (Resource Attached)" : ""}
-                         </span>
+                        <span className="font-medium text-sm">
+                          {i + 1}. {lecture.lectureTitle}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {lecture.lectureDuration} mins • {lecture.isPreviewFree ? "Free" : "Paid"}
+                          {lecture.videoFile ? " • (Video Attached)" : ""}
+                          {lecture.resourceFile ? " • (Resource Attached)" : ""}
+                        </span>
                       </div>
                       <button
                         type="button"
@@ -323,16 +345,56 @@ if (isEducator) {
                     </div>
                   ))}
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowPopup(true);
-                      setCurrentChapterId(chapter.chapterId);
-                    }}
-                    className="w-full py-2 border-2 border-dashed border-gray-300 rounded-md text-gray-500 hover:bg-gray-100 transition"
-                  >
-                    + Add Lecture
-                  </button>
+                  {(chapter.quizzes || []).map((quiz, i) => (
+                    <div key={quiz.quizId} className="flex justify-between items-center bg-purple-50 p-3 rounded border border-purple-200">
+                      <div className="flex flex-col">
+                        <span className="font-medium text-sm text-purple-700">
+                          📝 {quiz.quizTitle}
+                        </span>
+                        <span className="text-xs text-purple-400">
+                          {quiz.questions.length} question{quiz.questions.length !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setChapters((prev) =>
+                            prev.map((ch) =>
+                              ch.chapterId === chapter.chapterId
+                                ? { ...ch, quizzes: ch.quizzes.filter((_, idx) => idx !== i) }
+                                : ch
+                            )
+                          )
+                        }
+                        className="text-gray-400 hover:text-red-500"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrentChapterId(chapter.chapterId);
+                        setShowPopup(true);
+                      }}
+                      className="flex-1 py-2 border-2 border-dashed border-gray-300 rounded-md text-gray-500 hover:bg-gray-100 transition"
+                    >
+                      + Add Lecture
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrentChapterId(chapter.chapterId);
+                        setShowQuizPopup(true);
+                      }}
+                      className="flex-1 py-2 border-2 border-dashed border-purple-300 rounded-md text-purple-500 hover:bg-purple-50 transition"
+                    >
+                      + Add Quiz
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -344,11 +406,20 @@ if (isEducator) {
         </button>
       </form>
 
+  
+      {showQuizPopup && (
+        <QuizPopup
+          setShowQuizPopup={setShowQuizPopup}
+          onSaveQuiz={handleQuizDataFromPopup}
+          chapterId={currentChapterId}
+        />
+      )}
+
       {showPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4 text-gray-800">Add Lecture Details</h2>
-            
+
             <div className="space-y-4">
               <div>
                 <p className="text-sm font-medium mb-1 text-gray-700">Lecture Title</p>
@@ -381,7 +452,6 @@ if (isEducator) {
                 />
               </div>
 
-              
               <div className="bg-gray-50 p-3 rounded-lg border border-dashed border-gray-300">
                 <p className="text-xs font-bold mb-2 text-gray-400 text-center uppercase tracking-wider">OR Video File</p>
                 <input
@@ -395,7 +465,6 @@ if (isEducator) {
                 )}
               </div>
 
-             
               <div className="bg-gray-50 p-3 rounded-lg border border-dashed border-gray-300">
                 <p className="text-xs font-bold mb-2 text-gray-700">Additional Resources (PDF, Code, etc.)</p>
                 <input
@@ -420,13 +489,13 @@ if (isEducator) {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button 
+                <button
                   onClick={handleAddLecture}
                   className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 font-bold shadow-sm"
                 >
                   Add Lecture
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     setShowPopup(false);
                     setLectureDetails({ lectureTitle: "", lectureDuration: "", lectureUrl: "", videoFile: null, resourceFile: null, isPreviewFree: false });
@@ -442,8 +511,6 @@ if (isEducator) {
       )}
     </div>
   );
-}
- 
 };
 
 export default AddCourse;

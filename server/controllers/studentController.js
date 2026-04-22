@@ -527,6 +527,58 @@ const enrollFreeCourse = async (req, res) => {
   }
 };
 
+
+const submitQuizScore = async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    
+    const { courseId, quizId, score, userAnswers } = req.body; 
+
+    if (!courseId || !quizId || score === undefined) {
+      throw new Error("Missing required fields");
+    }
+
+    let progressData = await CourseProgress.findOne({ userId, courseId });
+    
+    if (!progressData) {
+      progressData = await CourseProgress.create({
+        userId,
+        courseId,
+        lectureCompleted: [],
+        quizProgress: []
+      });
+    }
+
+    const quizIndex = progressData.quizProgress.findIndex(q => q.quizId === quizId);
+
+    if (quizIndex > -1) {
+      if (progressData.quizProgress[quizIndex].attempts >= 1) {
+        return res.json({ success: false, message: "Maximum attempts reached." });
+      }
+      
+      progressData.quizProgress[quizIndex].attempts += 1;
+      progressData.quizProgress[quizIndex].bestScore = Math.max(progressData.quizProgress[quizIndex].bestScore, score);
+      
+      
+      progressData.quizProgress[quizIndex].userAnswers = userAnswers; 
+    } else {
+      progressData.quizProgress.push({
+        quizId,
+        attempts: 1,
+        bestScore: score,
+        userAnswers 
+      });
+    }
+
+    await progressData.save();
+
+    res.json({ success: true, message: "Quiz score saved successfully!", progressData });
+
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
 export {
   registerStudent,
   loginStudent,
@@ -538,4 +590,5 @@ export {
   addUserRating,
   updateStudentProfile,
   enrollFreeCourse,
+  submitQuizScore
 };

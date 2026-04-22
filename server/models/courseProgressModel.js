@@ -21,7 +21,18 @@ const courseProgressSchema = new mongoose.Schema(
         type: String,
       },
     ],
+
+   quizProgress: [
+      {
+        quizId: { type: String, required: true },
+        attempts: { type: Number, default: 0 },
+        bestScore: { type: Number, default: 0 },
+        userAnswers: { type: [Number], default: [] } 
+      }
+    ]
   },
+  
+  
   { minimize: false, timestamps: true }
 );
 

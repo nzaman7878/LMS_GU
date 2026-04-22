@@ -11,6 +11,8 @@ import {
   addUserRating ,
   updateStudentProfile ,
   enrollFreeCourse,
+  submitQuizScore
+
 } from "../controllers/studentController.js";
 
 import authStudent from "../middleware/authStudent.js";
@@ -40,5 +42,6 @@ studentRouter.put(
   updateStudentProfile
 );
 studentRouter.post("/enroll-free", authStudent, enrollFreeCourse);
+studentRouter.post("/submit-quiz", authStudent, submitQuizScore);
 
 export default studentRouter;

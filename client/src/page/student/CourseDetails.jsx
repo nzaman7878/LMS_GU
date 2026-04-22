@@ -321,6 +321,23 @@ const CourseDetails = () => {
                             </li>
                           ))}
                         </ul>
+                        {chapter.quizzes && chapter.quizzes.length > 0 && (
+  <ul className="border-t border-purple-100 divide-y divide-purple-50 bg-purple-50/30">
+    {chapter.quizzes.map((quiz, qIdx) => (
+      <li key={quiz.quizId} className="flex justify-between items-center px-4 py-3 text-sm">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <span className="text-purple-600 shrink-0">📝</span>
+          <span className="truncate text-purple-800 font-medium">
+            {quiz.quizTitle}
+          </span>
+        </div>
+        <div className="flex items-center gap-3 shrink-0 ml-4 text-xs text-purple-500 font-medium">
+          {quiz.questions?.length} Questions
+        </div>
+      </li>
+    ))}
+  </ul>
+)}
                       </div>
                     </div>
                   ))

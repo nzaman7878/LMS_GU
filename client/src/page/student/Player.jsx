@@ -8,6 +8,8 @@ import Footer from "../../components/students/Footer";
 import YouTube from "react-youtube";
 import { assets } from "../../assets/assets";
 
+import TakeQuiz from "../../components/students/TakeQuiz";
+
 const Player = () => {
   const {
     enrolledCourses,
@@ -31,7 +33,7 @@ const Player = () => {
         setCourseData(course);
 
         const userRating = course.courseRatings?.find(
-          (item) => item.userId === student?._id
+          (item) => item.userId === student?._id,
         );
 
         if (userRating) {
@@ -41,7 +43,6 @@ const Player = () => {
     });
   };
 
-  
   const markLectureAsCompleted = async (lectureId) => {
     try {
       const token = localStorage.getItem("studentToken");
@@ -49,7 +50,7 @@ const Player = () => {
       const { data } = await axios.post(
         `${backendUrl}/api/students/update-course-progress`,
         { courseId, lectureId },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (data.success) {
@@ -63,7 +64,6 @@ const Player = () => {
     }
   };
 
-  
   const getCourseProgress = async () => {
     try {
       const token = localStorage.getItem("studentToken");
@@ -71,7 +71,7 @@ const Player = () => {
       const { data } = await axios.post(
         `${backendUrl}/api/students/get-course-progress`,
         { courseId },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (data.success) {
@@ -84,7 +84,6 @@ const Player = () => {
     }
   };
 
-  
   const handleRate = async (rating) => {
     try {
       const token = localStorage.getItem("studentToken");
@@ -92,7 +91,7 @@ const Player = () => {
       const { data } = await axios.post(
         `${backendUrl}/api/students/add-rating`,
         { courseId, rating },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (data.success) {
@@ -105,15 +104,12 @@ const Player = () => {
     }
   };
 
-  
   const getYouTubeId = (url) => {
     if (!url) return "";
     const regExp =
       /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(regExp);
-    return match && match[2].length === 11
-      ? match[2]
-      : url.split("/").pop();
+    return match && match[2].length === 11 ? match[2] : url.split("/").pop();
   };
 
   const toggleSection = (index) => {
@@ -138,8 +134,6 @@ const Player = () => {
   return (
     <>
       <div className="p-4 sm:p-10 flex flex-col-reverse md:grid md:grid-cols-2 gap-10 md:px-36">
-        
-        {/* LEFT SIDE */}
         <div className="text-gray-800">
           <h2 className="text-xl font-semibold">Course Structure</h2>
 
@@ -149,22 +143,17 @@ const Player = () => {
                 key={index}
                 className="border border-gray-300 bg-white mb-2 rounded overflow-hidden"
               >
-               
                 <div
                   className="flex items-center justify-between px-4 py-3 cursor-pointer bg-gray-50"
                   onClick={() => toggleSection(index)}
                 >
                   <div className="flex items-center gap-2">
                     <img
-                      className={`w-3 transition-transform ${
-                        openSections[index] ? "rotate-180" : ""
-                      }`}
+                      className={`w-3 transition-transform ${openSections[index] ? "rotate-180" : ""}`}
                       src={assets.down_arrow_icon}
                       alt=""
                     />
-                    <p className="font-medium">
-                      {chapter?.chapterTitle}
-                    </p>
+                    <p className="font-medium">{chapter?.chapterTitle}</p>
                   </div>
 
                   <p className="text-xs text-gray-500">
@@ -173,19 +162,16 @@ const Player = () => {
                   </p>
                 </div>
 
-                {/* Lectures */}
                 <div
                   className={`transition-all duration-300 ${
-                    openSections[index]
-                      ? "max-h-[1000px]"
-                      : "max-h-0"
+                    openSections[index] ? "max-h-[2000px]" : "max-h-0"
                   } overflow-hidden`}
                 >
                   <ul className="border-t border-gray-200">
                     {chapter?.chapterContent?.map((lecture, i) => {
                       const isCompleted =
                         progressData?.lectureCompleted?.includes(
-                          lecture.lectureId
+                          lecture.lectureId,
                         );
 
                       return (
@@ -220,14 +206,14 @@ const Player = () => {
                                     ...lecture,
                                     chapter: index + 1,
                                     lecture: i + 1,
+                                    contentType: "video",
                                   })
                                 }
-                                className="text-blue-600 font-bold"
+                                className="text-blue-600 font-bold hover:underline"
                               >
                                 Watch
                               </button>
 
-                              
                               {lecture.resources?.length > 0 &&
                                 lecture.resources.map((res, idx) => (
                                   <a
@@ -235,7 +221,7 @@ const Player = () => {
                                     href={res.fileUrl}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="text-green-600 font-bold"
+                                    className="text-green-600 font-bold hover:underline"
                                   >
                                     {res.title}
                                   </a>
@@ -246,6 +232,47 @@ const Player = () => {
                       );
                     })}
                   </ul>
+
+                  {chapter?.quizzes && chapter.quizzes.length > 0 && (
+                    <ul className="bg-purple-50/30">
+                      {chapter.quizzes.map((quiz, qIdx) => (
+                        <li
+                          key={quiz.quizId}
+                          className="flex items-start gap-3 px-4 py-3 hover:bg-purple-50 border-b border-purple-100"
+                        >
+                          <span className="text-lg leading-none mt-0.5">
+                            📝
+                          </span>
+
+                          <div className="flex flex-col w-full">
+                            <div className="flex justify-between text-sm">
+                              <p className="font-medium text-purple-800">
+                                {quiz.quizTitle}
+                              </p>
+                              <p className="text-purple-400">
+                                {quiz.questions?.length} Qs
+                              </p>
+                            </div>
+
+                            <div className="flex gap-4 mt-1 text-xs flex-wrap">
+                              <button
+                                onClick={() =>
+                                  setPlayerData({
+                                    ...quiz,
+                                    chapter: index + 1,
+                                    contentType: "quiz",
+                                  })
+                                }
+                                className="text-purple-600 font-bold hover:underline"
+                              >
+                                Take Quiz
+                              </button>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
             ))}
@@ -253,20 +280,13 @@ const Player = () => {
 
           {/* Rating */}
           <div className="flex items-center gap-2 py-3 mt-10 border-t pt-10">
-            <h1 className="text-xl font-bold">
-              Rate this Course:
-            </h1>
-
+            <h1 className="text-xl font-bold">Rate this Course:</h1>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <img
                   key={star}
                   onClick={() => handleRate(star)}
-                  src={
-                    star <= initialRating
-                      ? assets.star
-                      : assets.star_blank
-                  }
+                  src={star <= initialRating ? assets.star : assets.star_blank}
                   className="w-5 cursor-pointer"
                   alt=""
                 />
@@ -275,59 +295,73 @@ const Player = () => {
           </div>
         </div>
 
-        
         <div className="md:sticky md:top-10 h-fit">
           {playerData ? (
             <div className="bg-white rounded shadow-lg p-2">
-              
-            
-              {playerData.videoType === "youtube" ? (
-                <YouTube
-                  videoId={getYouTubeId(playerData.youtubeUrl)}
-                  opts={{ playerVars: { autoplay: 1 } }}
-                  iframeClassName="w-full aspect-video"
+              {playerData.contentType === "quiz" ? (
+                <TakeQuiz
+                  quiz={playerData}
+                  courseId={courseId}
+                  progressData={progressData}
+                  getCourseProgress={getCourseProgress}
+                  backendUrl={backendUrl}
                 />
               ) : (
-                <video
-                  src={playerData.videoUrl}
-                  controls
-                  autoPlay
-                  className="w-full rounded"
-                />
+                <>
+                  {playerData.videoType === "youtube" ? (
+                    <YouTube
+                      videoId={getYouTubeId(playerData.youtubeUrl)}
+                      opts={{ playerVars: { autoplay: 1 } }}
+                      iframeClassName="w-full aspect-video"
+                    />
+                  ) : (
+                    <video
+                      src={playerData.videoUrl}
+                      controls
+                      autoPlay
+                      className="w-full rounded"
+                    />
+                  )}
+
+                  <div className="flex justify-between items-center mt-4 px-2 pb-2">
+                    <p className="font-bold text-gray-800">
+                      {playerData.chapter}.{playerData.lecture}{" "}
+                      {playerData.lectureTitle}
+                    </p>
+
+                    <button
+                      onClick={() =>
+                        markLectureAsCompleted(playerData.lectureId)
+                      }
+                      className={`font-medium px-3 py-1.5 rounded-md transition ${
+                        progressData?.lectureCompleted?.includes(
+                          playerData.lectureId,
+                        )
+                          ? "bg-green-50 text-green-600"
+                          : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                      }`}
+                    >
+                      {progressData?.lectureCompleted?.includes(
+                        playerData.lectureId,
+                      )
+                        ? "✓ Completed"
+                        : "Mark Complete"}
+                    </button>
+                  </div>
+                </>
               )}
-
-              <div className="flex justify-between items-center mt-4 px-2 pb-2">
-                <p className="font-bold">
-                  {playerData.chapter}.{playerData.lecture}{" "}
-                  {playerData.lectureTitle}
-                </p>
-
-                <button
-                  onClick={() =>
-                    markLectureAsCompleted(playerData.lectureId)
-                  }
-                  className={`font-medium ${
-                    progressData?.lectureCompleted?.includes(
-                      playerData.lectureId
-                    )
-                      ? "text-green-600"
-                      : "text-blue-600"
-                  }`}
-                >
-                  {progressData?.lectureCompleted?.includes(
-                    playerData.lectureId
-                  )
-                    ? "Completed"
-                    : "Mark Complete"}
-                </button>
-              </div>
             </div>
           ) : (
-            <img
-              src={courseData?.courseThumbnail}
-              className="w-full rounded shadow"
-              alt=""
-            />
+            <div className="w-full aspect-video bg-gray-100 rounded shadow flex items-center justify-center relative overflow-hidden group">
+              <img
+                src={courseData?.courseThumbnail}
+                className="w-full h-full object-cover opacity-60"
+                alt=""
+              />
+              <p className="absolute text-gray-700 font-semibold bg-white/80 px-4 py-2 rounded-lg shadow-sm backdrop-blur-sm">
+                Select a lecture or quiz to start learning
+              </p>
+            </div>
           )}
         </div>
       </div>

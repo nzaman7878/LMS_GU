@@ -17,6 +17,11 @@ const AddCourse = () => {
   const [discount, setDiscount] = useState(0);
   const [image, setImage] = useState(null);
 
+  // --- NEW COUPON STATE ---
+  const [couponCode, setCouponCode] = useState("");
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponExpiry, setCouponExpiry] = useState("");
+
   const [chapters, setChapters] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [currentChapterId, setCurrentChapterId] = useState(null);
@@ -130,7 +135,6 @@ const AddCourse = () => {
       if (!image) return toast.error("Thumbnail Not Selected");
       if (chapters.length === 0) return toast.error("Add at least one chapter");
 
-  
       const token = localStorage.getItem("educatorToken");
       if (!token) return toast.error("User not authenticated. Please login again.");
 
@@ -183,8 +187,9 @@ const AddCourse = () => {
         });
       });
 
-      const loadingToast = toast.loading("Uploading content...");
+      const loadingToast = toast.loading("Uploading course content...");
 
+      // 1. Create the Course
       const { data } = await axios.post(`${backendUrl}/api/course/create`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -195,11 +200,39 @@ const AddCourse = () => {
 
       if (data.success) {
         toast.success(data.message);
+        const newCourseId = data.course._id; 
+
+        // 2. If coupon data exists, create the Coupon tied to the new course
+        if (couponCode && couponDiscount > 0 && couponExpiry) {
+          try {
+            await axios.post(
+              `${backendUrl}/api/course/create-coupon`,
+              {
+                code: couponCode,
+                discountPercentage: couponDiscount,
+                expiryDate: couponExpiry,
+                courseId: newCourseId,
+              },
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
+            toast.success("Coupon code successfully attached to course!");
+          } catch (couponError) {
+            console.error("Coupon creation error:", couponError);
+            toast.error("Course published, but failed to create coupon.");
+          }
+        }
+
+        // 3. Reset form state
         setCourseTitle("");
         setCoursePrice(0);
         setDiscount(0);
         setChapters([]);
         setImage(null);
+        setCouponCode("");
+        setCouponDiscount(0);
+        setCouponExpiry("");
         if (quillRef.current) quillRef.current.root.innerHTML = "";
       } else {
         toast.error(data.message);
@@ -280,7 +313,7 @@ const AddCourse = () => {
         </div>
 
         <div className="flex flex-col gap-2 w-1/2">
-          <label className="font-medium">Discount (%)</label>
+          <label className="font-medium">General Discount (%)</label>
           <input
             type="number"
             value={discount}
@@ -289,6 +322,55 @@ const AddCourse = () => {
             min="0"
             max="100"
           />
+          <span className="text-xs text-gray-400">This applies automatically to all students.</span>
+        </div>
+
+        <hr className="my-2" />
+
+        {/* --- COUPON CREATION SECTION --- */}
+        <div className="bg-blue-50/50 border border-blue-100 p-5 rounded-lg space-y-4">
+          <div>
+            <h3 className="text-lg font-bold text-blue-900">Attach a Coupon Code (Optional)</h3>
+            <p className="text-sm text-blue-700/70">
+              Create a custom discount code (e.g., up to 100% off to make the course free).
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">Coupon Code</label>
+              <input
+                type="text"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                placeholder="e.g. FREE100"
+                className="border border-gray-300 px-3 py-2 rounded-md focus:ring-1 focus:ring-blue-500 outline-none uppercase"
+              />
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">Coupon Discount (%)</label>
+              <input
+                type="number"
+                value={couponDiscount}
+                onChange={(e) => setCouponDiscount(e.target.value)}
+                placeholder="0"
+                min="0"
+                max="100"
+                className="border border-gray-300 px-3 py-2 rounded-md focus:ring-1 focus:ring-blue-500 outline-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">Expiry Date</label>
+              <input
+                type="date"
+                value={couponExpiry}
+                onChange={(e) => setCouponExpiry(e.target.value)}
+                className="border border-gray-300 px-3 py-2 rounded-md focus:ring-1 focus:ring-blue-500 outline-none"
+              />
+            </div>
+          </div>
         </div>
 
         <hr className="my-2" />
@@ -406,7 +488,6 @@ const AddCourse = () => {
         </button>
       </form>
 
-  
       {showQuizPopup && (
         <QuizPopup
           setShowQuizPopup={setShowQuizPopup}
@@ -419,7 +500,7 @@ const AddCourse = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4 text-gray-800">Add Lecture Details</h2>
-
+            {/* Same lecture form inputs as before */}
             <div className="space-y-4">
               <div>
                 <p className="text-sm font-medium mb-1 text-gray-700">Lecture Title</p>

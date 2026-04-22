@@ -5,7 +5,9 @@ import {
   addResource,
   getAllCourse,
   getCourseId,
-  addQuiz
+  addQuiz,
+  createCoupon,
+  validateCoupon
 
 } from "../controllers/courseController.js";
 
@@ -45,6 +47,18 @@ courseRouter.post(
   "/:courseId/chapter/:chapterId/quiz",
   authEducator,
   addQuiz
+);
+
+courseRouter.post(
+  "/create-coupon",
+  authEducator,
+  createCoupon
+);
+
+
+courseRouter.post(
+  "/validate-coupon",
+  validateCoupon
 );
 
 export default courseRouter;

@@ -1,7 +1,7 @@
 import courseModel from "../models/courseModel.js";
 import educatorModel from "../models/educatorModel.js";
 import cloudinary from "../config/cloudinary.js";
-
+import Coupon from "../models/couponModel.js";
 
 
 
@@ -329,6 +329,81 @@ export const addQuiz = async (req, res) => {
       success: true,
       message: "Quiz added successfully",
       quiz: newQuiz,
+    });
+
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+
+export const createCoupon = async (req, res) => {
+  try {
+    const { code, discountPercentage, expiryDate, courseId } = req.body;
+    const educatorId = req.educatorId;
+
+    const newCoupon = await Coupon.create({
+      code,
+      discountPercentage: Number(discountPercentage),
+      expiryDate,
+      courseId: courseId || null,
+      educatorId,
+    });
+
+    res.json({ 
+      success: true, 
+      message: "Coupon created successfully", 
+      coupon: newCoupon 
+    });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export const validateCoupon = async (req, res) => {
+  try {
+    const { code, courseId } = req.body;
+
+   
+    const coupon = await Coupon.findOne({ 
+      code: code.toUpperCase(), 
+      isActive: true 
+    });
+
+    if (!coupon) {
+      return res.json({ success: false, message: "Invalid or inactive coupon code." });
+    }
+
+    if (new Date() > new Date(coupon.expiryDate)) {
+      return res.json({ success: false, message: "This coupon has expired." });
+    }
+
+
+    if (coupon.courseId && coupon.courseId.toString() !== courseId) {
+      return res.json({ success: false, message: "Coupon is not valid for this specific course." });
+    }
+
+    const course = await courseModel.findById(courseId);
+    if (!course) {
+      return res.json({ success: false, message: "Course not found." });
+    }
+
+    const baseDiscountAmount = (course.coursePrice * course.discount) / 100;
+    const priceAfterBaseDiscount = course.coursePrice - baseDiscountAmount;
+
+    const couponDiscountAmount = (priceAfterBaseDiscount * coupon.discountPercentage) / 100;
+    const finalPrice = priceAfterBaseDiscount - couponDiscountAmount;
+
+    res.json({
+      success: true,
+      message: "Coupon applied successfully!",
+      couponDetails: {
+        code: coupon.code,
+        discountPercentage: coupon.discountPercentage,
+        originalPrice: course.coursePrice,
+        finalPrice: Math.max(0, finalPrice), 
+        isFree: finalPrice <= 0 
+      }
     });
 
   } catch (error) {

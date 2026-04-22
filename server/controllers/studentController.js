@@ -4,6 +4,8 @@ import Course from "../models/courseModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { CourseProgress } from "../models/courseProgressModel.js";
+import Coupon from "../models/couponModel.js";
+import courseModel from "../models/courseModel.js";
 
 import cloudinary from "../config/cloudinary.js";
 
@@ -436,6 +438,95 @@ const addUserRating = async (req, res) => {
     });
   }
 };
+
+const enrollFreeCourse = async (req, res) => {
+  try {
+    const { courseId, couponCode } = req.body;
+    
+    
+    const studentId = req.auth?.id || req.auth?.userId || req.user?.id || req.studentId; 
+
+    if (!studentId) {
+       return res.json({ success: false, message: "Authentication failed. User ID not found." });
+    }
+
+
+    if (!courseId) throw new Error("Course ID is required");
+
+    const course = await courseModel.findById(courseId);
+    if (!course) throw new Error("Course not found");
+
+    const student = await studentModel.findById(studentId);
+    if (!student) throw new Error("Student not found");
+
+    if (student.enrolledCourses.some((id) => id.toString() === courseId.toString())) {
+      return res.json({ success: false, message: "You are already enrolled in this course." });
+    }
+
+    let isFree = false;
+
+    const baseDiscountAmount = (course.coursePrice * course.discount) / 100;
+    const priceAfterBaseDiscount = course.coursePrice - baseDiscountAmount;
+
+    if (priceAfterBaseDiscount <= 0) {
+      isFree = true;
+    }
+
+ 
+    if (!isFree && couponCode) {
+      const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
+      
+      if (!coupon) {
+        return res.json({ success: false, message: "Invalid or inactive coupon code." });
+      }
+      if (new Date() > new Date(coupon.expiryDate)) {
+        return res.json({ success: false, message: "This coupon has expired." });
+      }
+      if (coupon.courseId && coupon.courseId.toString() !== courseId) {
+        return res.json({ success: false, message: "Coupon is not valid for this course." });
+      }
+
+      const couponDiscountAmount = (priceAfterBaseDiscount * coupon.discountPercentage) / 100;
+      const finalPrice = priceAfterBaseDiscount - couponDiscountAmount;
+
+      if (finalPrice <= 0) {
+        isFree = true;
+      }
+    }
+
+    if (!isFree) {
+      return res.json({ 
+        success: false, 
+        message: "Course is not free. Please complete the payment process." 
+      });
+    }
+
+    course.enrolledStudents.push(student._id);
+    await course.save();
+
+ 
+    student.enrolledCourses.push(course._id);
+    await student.save();
+
+  
+    await Purchase.create({
+      courseId: course._id,
+      userId: student._id,
+      amount: 0,
+      status: "completed", 
+    });
+
+    return res.json({
+      success: true,
+      message: "Successfully enrolled in the course for free!",
+    });
+
+  } catch (error) {
+    console.error("Free Enrollment Error:", error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
 export {
   registerStudent,
   loginStudent,
@@ -446,4 +537,5 @@ export {
   getUserCourseProgress,
   addUserRating,
   updateStudentProfile,
+  enrollFreeCourse,
 };

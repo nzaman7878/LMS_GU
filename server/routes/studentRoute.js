@@ -10,6 +10,7 @@ import {
   getUserCourseProgress,
   addUserRating ,
   updateStudentProfile ,
+  enrollFreeCourse,
 } from "../controllers/studentController.js";
 
 import authStudent from "../middleware/authStudent.js";
@@ -38,5 +39,6 @@ studentRouter.put(
   upload.single('image'), 
   updateStudentProfile
 );
+studentRouter.post("/enroll-free", authStudent, enrollFreeCourse);
 
 export default studentRouter;

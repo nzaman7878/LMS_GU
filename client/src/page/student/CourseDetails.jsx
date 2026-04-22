@@ -17,7 +17,13 @@ const CourseDetails = () => {
   const [openSections, setOpenSections] = useState({});
   const [playerData, setPlayerData] = useState(null);
   const [isAlreadyEnrolled, setIsAlreadyEnrolled] = useState(false);
-  const [loading, setLoading] = useState(true); // ✅ local loading state
+  const [loading, setLoading] = useState(true);
+
+
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [finalDisplayPrice, setFinalDisplayPrice] = useState(0);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
   const {
     calculateRating,
@@ -28,10 +34,9 @@ const CourseDetails = () => {
     backendUrl,
     student,
     enrolledCourses,
+    fetchUserEnrolledCourses
   } = useContext(AppContext);
 
-  // ✅ Fix: Fetch full course data directly from API (not from allCourses)
-  // because getAllCourse strips courseContent
   useEffect(() => {
     const fetchCourse = async () => {
       try {
@@ -39,6 +44,9 @@ const CourseDetails = () => {
         const { data } = await axios.get(`${backendUrl}/api/course/${id}`);
         if (data.success) {
           setCourseData(data.courseData);
+          
+          const baseDiscountAmount = (data.courseData.coursePrice * data.courseData.discount) / 100;
+          setFinalDisplayPrice(data.courseData.coursePrice - baseDiscountAmount);
         } else {
           toast.error(data.message);
         }
@@ -52,7 +60,6 @@ const CourseDetails = () => {
     if (id) fetchCourse();
   }, [id, backendUrl]);
 
-  // Check enrollment
   useEffect(() => {
     if (enrolledCourses?.length && courseData) {
       const isEnrolled = enrolledCourses.some(
@@ -64,15 +71,76 @@ const CourseDetails = () => {
     }
   }, [enrolledCourses, courseData]);
 
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) return toast.warn("Please enter a coupon code");
+    
+    try {
+      setIsApplyingCoupon(true);
+      const { data } = await axios.post(`${backendUrl}/api/course/validate-coupon`, {
+        code: couponInput,
+        courseId: courseData._id
+      });
+
+      if (data.success) {
+        toast.success(data.message);
+        setAppliedCoupon(data.couponDetails);
+        setFinalDisplayPrice(data.couponDetails.finalPrice);
+      } else {
+        toast.error(data.message);
+        removeCoupon();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to apply coupon");
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    const baseDiscountAmount = (courseData.coursePrice * courseData.discount) / 100;
+    setFinalDisplayPrice(courseData.coursePrice - baseDiscountAmount);
+  };
+
   const enrollCourse = async () => {
     try {
       if (!student) return toast.warn("Login to Enroll");
-      if (isAlreadyEnrolled) return navigate(`/course-player/${courseData._id}`);
+      if (isAlreadyEnrolled) return navigate(`/player/${courseData._id}`);
 
       const token = localStorage.getItem("studentToken");
+
+     
+      if (finalDisplayPrice === 0 || appliedCoupon?.isFree) {
+        const { data } = await axios.post(
+          `${backendUrl}/api/students/enroll-free`, 
+          { 
+            courseId: courseData._id, 
+            couponCode: appliedCoupon?.code 
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (data.success) {
+          toast.success("Enrolled successfully for free!");
+          setIsAlreadyEnrolled(true);
+          
+          // 🚨 THE MISSING LINE: Update the global state BEFORE navigating 🚨
+          await fetchUserEnrolledCourses(); 
+          
+          navigate(`/player/${courseData._id}`);
+        } else {
+          toast.error(data.message);
+        }
+        return;
+      }
+
       const { data } = await axios.post(
         `${backendUrl}/api/students/purchase`,
-        { courseId: courseData._id },
+        { 
+          courseId: courseData._id,
+          couponCode: appliedCoupon?.code 
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -92,8 +160,7 @@ const CourseDetails = () => {
 
   const extractVideoId = (url) => {
     if (!url) return "";
-    const regExp =
-      /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?v=))([^#&?]*).*/;
+    const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?v=))([^#&?]*).*/;
     const match = url.match(regExp);
     return match && match[7].length === 11 ? match[7] : "";
   };
@@ -102,19 +169,13 @@ const CourseDetails = () => {
   if (!courseData) return <Loading />;
 
   const rating = calculateRating(courseData);
-  const discountedPrice = (
-    (courseData?.coursePrice || 0) -
-    ((courseData?.discount || 0) * (courseData?.coursePrice || 0)) / 100
-  ).toFixed(2);
 
   return (
     <>
       <div className="bg-gradient-to-b from-cyan-100/70 to-white min-h-screen">
         <div className="flex flex-col-reverse lg:flex-row gap-10 relative items-start justify-between px-4 sm:px-8 lg:px-20 xl:px-36 pt-20 lg:pt-28 pb-10 text-left">
 
-          {/* ─── LEFT COLUMN ─── */}
           <div className="w-full lg:max-w-xl z-10 text-gray-500">
-
             <h1 className="text-3xl font-semibold text-gray-800">
               {courseData?.courseTitle}
             </h1>
@@ -126,7 +187,6 @@ const CourseDetails = () => {
               }}
             />
 
-            {/* Rating Row */}
             <div className="flex flex-wrap items-center gap-2 pt-3 text-sm">
               <p className="text-yellow-600 font-semibold">{rating}</p>
               <div className="flex">
@@ -143,7 +203,6 @@ const CourseDetails = () => {
               <p>{courseData?.enrolledStudents?.length || 0} students</p>
             </div>
 
-            {/* Educator */}
             <p className="pt-2 text-sm">
               Course by{" "}
               <span className="text-blue-600 underline cursor-pointer">
@@ -151,13 +210,12 @@ const CourseDetails = () => {
               </span>
             </p>
 
-            {/* ─── COURSE STRUCTURE ─── */}
+         
             <div className="pt-8">
               <h2 className="text-xl font-semibold text-gray-800">
                 Course Structure
               </h2>
 
-              {/* Summary */}
               <p className="text-sm text-gray-500 pt-1">
                 {courseData?.courseContent?.length} sections &bull;{" "}
                 {calculateNoOfLectures(courseData)} lectures &bull;{" "}
@@ -171,7 +229,6 @@ const CourseDetails = () => {
                       key={index}
                       className="border border-gray-300 bg-white rounded overflow-hidden"
                     >
-                      {/* Chapter Header */}
                       <div
                         className="flex justify-between items-center px-4 py-3 cursor-pointer select-none hover:bg-gray-50 transition-colors"
                         onClick={() => toggleSection(index)}
@@ -194,7 +251,6 @@ const CourseDetails = () => {
                         </p>
                       </div>
 
-                      {/* Lectures */}
                       <div
                         className={`overflow-hidden transition-all duration-300 ${
                           openSections[index] ? "max-h-[1000px]" : "max-h-0"
@@ -206,7 +262,6 @@ const CourseDetails = () => {
                               key={i}
                               className="flex justify-between items-center px-4 py-3 text-sm"
                             >
-                              {/* Left: icon + title */}
                               <div className="flex items-center gap-2 flex-1 min-w-0">
                                 {lecture.isPreviewFree ? (
                                   <img
@@ -215,7 +270,6 @@ const CourseDetails = () => {
                                     className="w-4 h-4 shrink-0"
                                   />
                                 ) : (
-                                  // Lock icon for paid lectures
                                   <svg
                                     className="w-4 h-4 shrink-0 text-gray-400"
                                     fill="currentColor"
@@ -239,13 +293,11 @@ const CourseDetails = () => {
                                 </span>
                               </div>
 
-                              {/* Right: Preview button + duration */}
                               <div className="flex items-center gap-3 shrink-0 ml-4">
                                 {lecture.isPreviewFree && (
                                   <button
                                     onClick={() =>
                                       setPlayerData({
-                                        // ✅ Handle both youtube and uploaded video
                                         videoId:
                                           lecture.videoType === "youtube"
                                             ? extractVideoId(lecture.youtubeUrl)
@@ -280,7 +332,6 @@ const CourseDetails = () => {
               </div>
             </div>
 
-            {/* ─── COURSE DESCRIPTION ─── */}
             <div className="pt-10 pb-10">
               <h2 className="text-xl font-semibold text-gray-800">
                 Course Description
@@ -294,14 +345,10 @@ const CourseDetails = () => {
             </div>
           </div>
 
-          {/* ─── RIGHT COLUMN (sticky card) ─── */}
           <div className="w-full lg:max-w-[400px] sticky top-24 z-10">
             <div className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-200">
-
-              {/* Video / Thumbnail */}
               <div className="relative w-full aspect-video bg-black">
                 {playerData ? (
-                  // ✅ Handle both youtube and uploaded video types
                   playerData.videoType === "upload" ? (
                     <video
                       src={playerData.videoUrl}
@@ -348,30 +395,56 @@ const CourseDetails = () => {
               </div>
 
               <div className="p-5">
-                {/* Countdown */}
-                <div className="flex items-center gap-2">
-                  <img className="w-3.5" src={assets.time_left_icon} alt="" />
-                  <p className="text-red-500 text-sm">
-                    <span className="font-semibold">5 days</span> left at this price!
-                  </p>
-                </div>
-
-                {/* Price */}
-                <div className="flex items-center gap-3 pt-2">
+            
+                <div className="flex items-end gap-3 pt-2">
                   <p className="text-gray-800 text-3xl font-bold">
-                    {currency}{discountedPrice}
+                    {finalDisplayPrice === 0 ? "Free" : `${currency}${finalDisplayPrice.toFixed(2)}`}
                   </p>
-                  <p className="text-gray-400 line-through text-lg">
-                    {currency}{courseData?.coursePrice?.toFixed(2)}
-                  </p>
-                  {courseData?.discount > 0 && (
-                    <p className="text-green-600 text-sm font-semibold">
-                      {courseData.discount}% off
+                  
+                  {(courseData?.discount > 0 || appliedCoupon) && finalDisplayPrice !== courseData.coursePrice && (
+                    <p className="text-gray-400 line-through text-lg mb-0.5">
+                      {currency}{courseData?.coursePrice?.toFixed(2)}
                     </p>
                   )}
                 </div>
 
-                {/* Stats */}
+                {/* --- COUPON INPUT FIELD --- */}
+                {!isAlreadyEnrolled && (
+                  <div className="pt-5 pb-2">
+                    {appliedCoupon ? (
+                      <div className="flex items-center justify-between bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+                        <div>
+                          <span className="font-semibold block">Coupon Applied!</span>
+                          <span className="text-xs text-green-600">{appliedCoupon.code} ({appliedCoupon.discountPercentage}% off)</span>
+                        </div>
+                        <button 
+                          onClick={removeCoupon} 
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded transition"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Have a coupon code?"
+                          value={couponInput}
+                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                          className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 uppercase"
+                        />
+                        <button 
+                          onClick={handleApplyCoupon} 
+                          disabled={isApplyingCoupon}
+                          className="bg-gray-800 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-gray-900 transition disabled:bg-gray-400"
+                        >
+                          {isApplyingCoupon ? "..." : "Apply"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex items-center text-sm gap-4 pt-3 text-gray-500">
                   <div className="flex items-center gap-1">
                     <img src={assets.star} alt="" className="w-4" />
@@ -389,15 +462,14 @@ const CourseDetails = () => {
                   </div>
                 </div>
 
-                {/* Enroll Button */}
+                
                 <button
                   onClick={enrollCourse}
                   className="mt-5 w-full py-3 rounded-lg bg-blue-600 text-white font-semibold text-base hover:bg-blue-700 active:scale-95 transition-all"
                 >
-                  {isAlreadyEnrolled ? "Go to Course →" : "Enroll Now"}
+                  {isAlreadyEnrolled ? "Go to Course →" : finalDisplayPrice === 0 ? "Enroll for Free" : "Enroll Now"}
                 </button>
 
-                {/* What's included */}
                 <div className="pt-5">
                   <p className="font-semibold text-gray-800 text-sm">
                     What's in the course?
@@ -413,7 +485,6 @@ const CourseDetails = () => {
               </div>
             </div>
           </div>
-
         </div>
       </div>
       <Footer />

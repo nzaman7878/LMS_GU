@@ -410,3 +410,180 @@ export const validateCoupon = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+export const updateCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const educatorId = req.educatorId;
+    const { courseData } = req.body; 
+    const files = req.files || [];
+
+    const course = await courseModel.findById(courseId);
+    if (!course) throw new Error("Course not found");
+
+    if (course.educator.toString() !== educatorId.toString()) {
+      throw new Error("Unauthorized: You can only update your own courses");
+    }
+
+    let parsedData = courseData ? JSON.parse(courseData) : {};
+    const getFile = (fieldname) => files.find((f) => f.fieldname === fieldname);
+
+    const thumbnailFile = getFile("thumbnail");
+    if (thumbnailFile) {
+      if (course.thumbnailPublicId) {
+        await cloudinary.uploader.destroy(course.thumbnailPublicId);
+      }
+      const thumbnailUpload = await cloudinary.uploader.upload(thumbnailFile.path);
+      parsedData.courseThumbnail = thumbnailUpload.secure_url;
+      parsedData.thumbnailPublicId = thumbnailUpload.public_id;
+    }
+
+
+    if (parsedData.courseContent && parsedData.courseContent.length > 0) {
+      parsedData.courseContent = await Promise.all(
+        parsedData.courseContent.map(async (chapter) => {
+          if (chapter.chapterContent && chapter.chapterContent.length > 0) {
+            chapter.chapterContent = await Promise.all(
+              chapter.chapterContent.map(async (lecture) => {
+                
+              
+                if (lecture.videoType === "upload" && lecture.videoFileName) {
+                  const videoFile = getFile(lecture.videoFileName);
+                  if (videoFile) {
+                    const videoUpload = await cloudinary.uploader.upload(videoFile.path, { resource_type: "video" });
+                    lecture.videoUrl = videoUpload.secure_url;
+                    lecture.videoPublicId = videoUpload.public_id;
+                  }
+                }
+
+                if (lecture.resources && lecture.resources.length > 0) {
+                  lecture.resources = await Promise.all(
+                    lecture.resources.map(async (resource) => {
+                      if (resource.fileName) {
+                        const resourceFile = getFile(resource.fileName);
+                        if (resourceFile) {
+                          const upload = await cloudinary.uploader.upload(resourceFile.path, { resource_type: "raw" });
+                          resource.fileUrl = upload.secure_url;
+                          resource.public_id = upload.public_id;
+                        }
+                      }
+                      return resource;
+                    })
+                  );
+                }
+                return lecture;
+              })
+            );
+          }
+          return chapter;
+        })
+      );
+    }
+
+    
+    const extractPublicIds = (content) => {
+      let videoIds = [];
+      let resourceIds = [];
+      if (!content) return { videoIds, resourceIds };
+
+      content.forEach(chapter => {
+        chapter.chapterContent?.forEach(lecture => {
+          if (lecture.videoPublicId) videoIds.push(lecture.videoPublicId);
+          lecture.resources?.forEach(res => {
+            if (res.public_id) resourceIds.push(res.public_id);
+          });
+        });
+      });
+      return { videoIds, resourceIds };
+    };
+
+    const oldAssets = extractPublicIds(course.courseContent);
+    const newAssets = extractPublicIds(parsedData.courseContent);
+
+   
+    const orphanedVideos = oldAssets.videoIds.filter(id => !newAssets.videoIds.includes(id));
+    const orphanedResources = oldAssets.resourceIds.filter(id => !newAssets.resourceIds.includes(id));
+
+    for (let id of orphanedVideos) {
+      await cloudinary.uploader.destroy(id, { resource_type: "video" });
+    }
+    for (let id of orphanedResources) {
+      await cloudinary.uploader.destroy(id, { resource_type: "raw" });
+    }
+
+    const updatedCourse = await courseModel.findByIdAndUpdate(
+      courseId,
+      { $set: parsedData },
+      { new: true, runValidators: true }
+    );
+
+    res.json({
+      success: true,
+      message: "Course updated successfully",
+      course: updatedCourse,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export const deleteCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const educatorId = req.educatorId;
+
+   
+    const course = await courseModel.findById(courseId);
+    if (!course) throw new Error("Course not found");
+
+    if (course.educator.toString() !== educatorId.toString()) {
+      throw new Error("Unauthorized: You can only delete your own courses");
+    }
+
+    
+    if (course.thumbnailPublicId) {
+      await cloudinary.uploader.destroy(course.thumbnailPublicId);
+    }
+
+
+    if (course.courseContent && course.courseContent.length > 0) {
+      for (const chapter of course.courseContent) {
+        for (const lecture of chapter.chapterContent) {
+   
+          if (lecture.videoType === "upload" && lecture.videoPublicId) {
+            await cloudinary.uploader.destroy(lecture.videoPublicId, { resource_type: "video" });
+          }
+     
+          if (lecture.resources && lecture.resources.length > 0) {
+            for (const resource of lecture.resources) {
+              if (resource.public_id) {
+                await cloudinary.uploader.destroy(resource.public_id, { resource_type: "raw" });
+              }
+            }
+          }
+        }
+      }
+    }
+
+
+    await courseModel.findByIdAndDelete(courseId);
+
+    await educatorModel.findByIdAndUpdate(educatorId, {
+      $pull: { courses: courseId },
+    });
+
+   
+    await Coupon.deleteMany({ courseId: courseId });
+
+    res.json({
+      success: true,
+      message: "Course and associated media deleted successfully",
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: error.message });
+  }
+};

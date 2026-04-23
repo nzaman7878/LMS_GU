@@ -16,6 +16,7 @@ import EducatorDashboard from './page/educator/EducatorDashboard'
 import AddCourse from './page/educator/AddCourse'
 import MyCourses from './page/educator/MyCourses'
 import StudentsEnrolled from './page/educator/StudentsEnrolled'
+import EditCourse from './components/teacher/EditCourse'
 
 import AdminLogin from './page/admin/AdminLogin'
 import Admin from './page/admin/Admin'
@@ -64,6 +65,7 @@ function App() {
           <Route index element={<EducatorDashboard />} />
           <Route path='dashboard' element={<EducatorDashboard />} />
           <Route path='add-course' element={<AddCourse />} />
+          <Route path="/educator/edit-course/:courseId" element={<EditCourse />} />
           <Route path='my-courses' element={<MyCourses />} />
           <Route path='students-enrolled' element={<StudentsEnrolled />} />
         </Route>

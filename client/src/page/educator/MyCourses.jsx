@@ -3,15 +3,15 @@ import { AppContext } from "../../context/AppContext";
 import Loading from "../../components/students/Loading";
 import axios from "axios";
 import { toast } from "react-toastify"; 
+import { useNavigate } from "react-router-dom"; // <-- Added for routing
 
 const MyCourses = () => {
   const { currency, backendUrl, isEducator } = useContext(AppContext);
-
   const [courses, setCourses] = useState(null);
+  const navigate = useNavigate(); // <-- Initialize navigate
 
   const fetchEducatorCourses = async () => {
     try {
-      
       const token = localStorage.getItem("educatorToken");
 
       if (!token) {
@@ -28,6 +28,34 @@ const MyCourses = () => {
 
       if (data.success) {
         setCourses(data.courses);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message);
+    }
+  };
+
+  // --- NEW: Delete Course Handler ---
+  const handleDeleteCourse = async (courseId) => {
+    // Prevent accidental deletions
+    if (!window.confirm("Are you sure you want to delete this course? This cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("educatorToken");
+      const { data } = await axios.delete(
+        `${backendUrl}/api/course/delete/${courseId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (data.success) {
+        toast.success(data.message);
+        // Remove the deleted course from the UI without refreshing the page
+        setCourses((prevCourses) => prevCourses.filter((course) => course._id !== courseId));
       } else {
         toast.error(data.message);
       }
@@ -56,6 +84,8 @@ const MyCourses = () => {
               <th className='px-4 py-3 font-medium'>Earnings</th>
               <th className='px-4 py-3 font-medium'>Students</th>
               <th className='px-4 py-3 font-medium'>Published On</th>
+              {/* --- NEW: Actions Column Header --- */}
+              <th className='px-4 py-3 font-medium text-center'>Actions</th>
             </tr>
           </thead>
 
@@ -96,12 +126,31 @@ const MyCourses = () => {
                         day: 'numeric'
                       })}
                     </td>
+
+                    {/* --- NEW: Action Buttons --- */}
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => navigate(`/educator/edit-course/${course._id}`)}
+                          className="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded hover:bg-blue-100 transition"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCourse(course._id)}
+                          className="px-3 py-1 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+
                   </tr>
                 );
               })
             ) : (
               <tr>
-                <td colSpan="4" className="px-4 py-10 text-center text-gray-400">
+                <td colSpan="5" className="px-4 py-10 text-center text-gray-400">
                   You haven't created any courses yet.
                 </td>
               </tr>

@@ -1,6 +1,7 @@
 import express from "express";
 import { educatorLogin, getEducatorProfile,   // <--- Added
   updateEducatorProfile, getEducatorCourses , educatorDashboardData , getEnrolledStudentsData } from "../controllers/educatorController.js";
+import upload from '../middleware/multer.js';
 import authEducator from "../middleware/authEducator.js";
 
 
@@ -13,7 +14,7 @@ educatorRouter.post("/login", educatorLogin);
 educatorRouter.get("/profile", authEducator, getEducatorProfile);
 
 
-educatorRouter.post("/update-profile", authEducator, updateEducatorProfile);
+educatorRouter.post("/update-profile", authEducator, upload.single('image'), updateEducatorProfile);
 
 educatorRouter.get("/courses", authEducator, getEducatorCourses);
 

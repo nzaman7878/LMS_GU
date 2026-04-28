@@ -78,30 +78,50 @@ const getEducatorProfile = async (req, res) => {
 };
 
 // UPDATE EDUCATOR PROFILE
+import { v2 as cloudinary } from 'cloudinary';
+
 const updateEducatorProfile = async (req, res) => {
   try {
     const educatorId = req.educatorId;
-    const { name, subject, qualification, experience, about, image } = req.body;
+    const { name, subject, qualification, experience, about } = req.body;
+    const imageFile = req.file; // This comes from multer middleware
 
+    // Create an update object with the text fields
+    const updateData = {
+      name,
+      subject,
+      qualification,
+      experience,
+      about
+    };
+
+    // If a new image file is uploaded, process it with Cloudinary
+    if (imageFile) {
+      const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
+        resource_type: "image",
+      });
+      updateData.image = imageUpload.secure_url;
+    }
+
+    // Find and update the educator
     const updatedEducator = await educatorModel.findByIdAndUpdate(
       educatorId,
-      {
-        name,
-        subject,
-        qualification,
-        experience,
-        about,
-        image 
-      },
+      updateData,
       { new: true, runValidators: true }
     ).select("-password");
+
+    if (!updatedEducator) {
+      return res.status(404).json({ success: false, message: "Educator not found" });
+    }
 
     res.json({
       success: true,
       message: "Profile updated successfully",
       educator: updatedEducator,
     });
+
   } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

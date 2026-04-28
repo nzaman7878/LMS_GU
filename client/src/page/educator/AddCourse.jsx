@@ -17,7 +17,6 @@ const AddCourse = () => {
   const [discount, setDiscount] = useState(0);
   const [image, setImage] = useState(null);
 
-  // --- NEW COUPON STATE ---
   const [couponCode, setCouponCode] = useState("");
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponExpiry, setCouponExpiry] = useState("");
@@ -36,13 +35,32 @@ const AddCourse = () => {
     isPreviewFree: false,
   });
 
+  // --- BULLETPROOF QUILL SETUP FOR REACT 18 ---
   useEffect(() => {
-    if (!quillRef.current && editorRef.current) {
-      quillRef.current = new Quill(editorRef.current, {
+    if (quillRef.current) return; // Prevent double init
+
+    if (editorRef.current) {
+      // Clear React wrapper div
+      editorRef.current.innerHTML = "";
+
+      // 1. Create a NEW inner div for Quill
+      const editorDiv = document.createElement("div");
+      editorRef.current.append(editorDiv);
+
+      // 2. Initialize Quill on the NEW element
+      quillRef.current = new Quill(editorDiv, {
         theme: "snow",
         placeholder: "Write course description here...",
       });
     }
+
+    // Cleanup function for when component unmounts
+    return () => {
+      if (editorRef.current) {
+        editorRef.current.innerHTML = ""; 
+      }
+      quillRef.current = null;
+    };
   }, []);
 
   const handleChapter = (action, chapterId) => {
@@ -189,7 +207,6 @@ const AddCourse = () => {
 
       const loadingToast = toast.loading("Uploading course content...");
 
-      // 1. Create the Course
       const { data } = await axios.post(`${backendUrl}/api/course/create`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -202,7 +219,6 @@ const AddCourse = () => {
         toast.success(data.message);
         const newCourseId = data.course._id; 
 
-        // 2. If coupon data exists, create the Coupon tied to the new course
         if (couponCode && couponDiscount > 0 && couponExpiry) {
           try {
             await axios.post(
@@ -224,7 +240,6 @@ const AddCourse = () => {
           }
         }
 
-        // 3. Reset form state
         setCourseTitle("");
         setCoursePrice(0);
         setDiscount(0);
@@ -327,7 +342,6 @@ const AddCourse = () => {
 
         <hr className="my-2" />
 
-        {/* --- COUPON CREATION SECTION --- */}
         <div className="bg-blue-50/50 border border-blue-100 p-5 rounded-lg space-y-4">
           <div>
             <h3 className="text-lg font-bold text-blue-900">Attach a Coupon Code (Optional)</h3>
@@ -500,7 +514,6 @@ const AddCourse = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4 text-gray-800">Add Lecture Details</h2>
-            {/* Same lecture form inputs as before */}
             <div className="space-y-4">
               <div>
                 <p className="text-sm font-medium mb-1 text-gray-700">Lecture Title</p>

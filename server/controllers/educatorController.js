@@ -61,6 +61,50 @@ const educatorLogin = async (req, res) => {
   }
 };
 
+// GET EDUCATOR PROFILE DATA
+const getEducatorProfile = async (req, res) => {
+  try {
+    const educatorId = req.educatorId;
+    const educator = await educatorModel.findById(educatorId).select("-password");
+
+    if (!educator) {
+      return res.status(404).json({ success: false, message: "Educator not found" });
+    }
+
+    res.json({ success: true, educator });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// UPDATE EDUCATOR PROFILE
+const updateEducatorProfile = async (req, res) => {
+  try {
+    const educatorId = req.educatorId;
+    const { name, subject, qualification, experience, about, image } = req.body;
+
+    const updatedEducator = await educatorModel.findByIdAndUpdate(
+      educatorId,
+      {
+        name,
+        subject,
+        qualification,
+        experience,
+        about,
+        image 
+      },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      educator: updatedEducator,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 // GET EDUCATOR COURSES
 
@@ -162,6 +206,8 @@ const getEnrolledStudentsData = async (req, res) => {
 
 export {
   educatorLogin,
+  getEducatorProfile,   
+  updateEducatorProfile,
   getEducatorCourses,
   educatorDashboardData,
   getEnrolledStudentsData,

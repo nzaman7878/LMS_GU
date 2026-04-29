@@ -326,4 +326,38 @@ const deleteStudent = async (req, res) => {
   }
 };
 
-export {registerAdmin, loginAdmin, addEducator , getAllEducators , updateEducator, deleteEducator , getAllStudents , updateStudent , deleteStudent , getAllCoursesAdmin , deleteCourseAdmin };
+ const getDashboardStats = async (req, res) => {
+  try {
+    
+    const totalCourses = await Course.countDocuments();
+    const totalStudents = await studentModel.countDocuments(); 
+    const totalEducators = await educatorModel.countDocuments(); 
+
+   
+    const courses = await Course.find({}, "coursePrice enrolledStudents discount");
+    
+    let totalRevenue = 0;
+    courses.forEach((course) => {
+     
+      const actualPrice = course.coursePrice - (course.coursePrice * (course.discount / 100));
+      const studentsCount = course.enrolledStudents ? course.enrolledStudents.length : 0;
+      
+      totalRevenue += (actualPrice * studentsCount);
+    });
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalCourses,
+        totalStudents,
+        totalEducators,
+        totalRevenue,
+      },
+    });
+  } catch (error) {
+    console.error("Dashboard Stats Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export {registerAdmin, loginAdmin, addEducator , getAllEducators , updateEducator, deleteEducator , getAllStudents , updateStudent , deleteStudent , getAllCoursesAdmin , deleteCourseAdmin , getDashboardStats };

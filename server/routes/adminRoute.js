@@ -1,5 +1,5 @@
 import express from "express";
-import { registerAdmin, loginAdmin , addEducator , getAllEducators , deleteEducator , updateEducator , getAllStudents , updateStudent, deleteStudent , getAllCoursesAdmin,deleteCourseAdmin} from "../controllers/adminController.js";
+import { registerAdmin, loginAdmin , addEducator , getAllEducators , deleteEducator , updateEducator , getAllStudents , updateStudent, deleteStudent , getAllCoursesAdmin,deleteCourseAdmin , getDashboardStats} from "../controllers/adminController.js";
 import upload from '../middleware/multer.js'
 import authAdmin from "../middleware/authAdmin.js";
 import { updateCourse } from "../controllers/courseController.js";
@@ -19,5 +19,6 @@ adminRouter.post("/delete-student", authAdmin, deleteStudent);
 adminRouter.get('/courses',authAdmin, getAllCoursesAdmin)
 adminRouter.delete('/course/:courseId',authAdmin, deleteCourseAdmin);
 adminRouter.put("/course/update/:courseId", authAdmin,upload.any(), updateCourse);
+adminRouter.get("/dashboard-stats", authAdmin, getDashboardStats);
 
 export default adminRouter;

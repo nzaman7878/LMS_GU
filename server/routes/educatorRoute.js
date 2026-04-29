@@ -1,5 +1,5 @@
 import express from "express";
-import { educatorLogin, getEducatorProfile,   // <--- Added
+import { educatorLogin, getEducatorProfile,   
   updateEducatorProfile, getEducatorCourses , educatorDashboardData , getEnrolledStudentsData } from "../controllers/educatorController.js";
 import upload from '../middleware/multer.js';
 import authEducator from "../middleware/authEducator.js";

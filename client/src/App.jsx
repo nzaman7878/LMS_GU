@@ -79,6 +79,7 @@ function App() {
           <Route path="manage-courses" element={<ManageCourses />} />
           <Route path="manage-students" element={<ManageStudents />} />
           <Route path="manage-educators" element={<ManageEducators />} />
+          <Route path="/admin/edit-course/:courseId" element={<EditCourse />} />
         </Route>
 
         <Route path="*" element={<h1>404 Not Found</h1>} />

@@ -13,6 +13,12 @@ const EditCourse = () => {
   const { courseId } = useParams(); 
   const navigate = useNavigate();
   
+  // --- Check for Admin Role ---
+  const adminToken = localStorage.getItem("adminToken");
+  const isAdmin = !!adminToken;
+  const hasAccess = isEducator || isAdmin;
+  // ---------------------------------
+
   const quillRef = useRef(null);
   const editorRef = useRef(null);
 
@@ -38,7 +44,6 @@ const EditCourse = () => {
     isPreviewFree: false,
   });
 
-
   useEffect(() => {
     if (!isLoading && editorRef.current && !quillRef.current) {
       quillRef.current = new Quill(editorRef.current, {
@@ -62,6 +67,7 @@ const EditCourse = () => {
           setDiscount(course.discount);
           setImage(course.courseThumbnail); 
           setImagePreview(course.courseThumbnail);
+          setCourseDescription(course.courseDescription);
 
           if (quillRef.current) {
             quillRef.current.root.innerHTML = course.courseDescription;
@@ -191,7 +197,7 @@ const EditCourse = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("educatorToken");
+      const token = isAdmin ? adminToken : localStorage.getItem("educatorToken");
       if (!token) return toast.error("Please login again.");
 
       const formData = new FormData();
@@ -204,9 +210,7 @@ const EditCourse = () => {
         courseContent: chapters.map((chapter) => ({
           ...chapter,
           chapterContent: chapter.chapterContent.map((lecture) => {
-           
             const videoType = lecture.videoFile ? "upload" : (lecture.videoType || "youtube");
-
             return {
               ...lecture,
               videoType,
@@ -239,7 +243,12 @@ const EditCourse = () => {
 
       const loadingToast = toast.loading("Updating course details...");
 
-      const { data } = await axios.put(`${backendUrl}/api/course/update/${courseId}`, formData, {
+     
+      const updateUrl = isAdmin 
+        ? `${backendUrl}/api/admin/course/update/${courseId}` 
+        : `${backendUrl}/api/course/update/${courseId}`;
+
+      const { data } = await axios.put(updateUrl, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -249,7 +258,7 @@ const EditCourse = () => {
 
       if (data.success) {
         toast.success("Course updated successfully!");
-        navigate("/educator/my-courses"); 
+        navigate(isAdmin ? "/admin/manage-courses" : "/educator/my-courses"); 
       } else {
         toast.error(data.message);
       }
@@ -260,7 +269,7 @@ const EditCourse = () => {
     }
   };
 
-  if (!isEducator) {
+  if (!hasAccess) {
     return <div className="flex items-center justify-center h-screen w-full text-gray-500">Permission denied.</div>;
   }
 
@@ -276,8 +285,12 @@ const EditCourse = () => {
       >
         <div className="flex justify-between items-center">
             <h2 className="text-2xl font-semibold text-gray-800">Edit Course</h2>
-            <button type="button" onClick={() => navigate("/educator/my-courses")} className="text-sm text-blue-600 hover:underline">
-                &larr; Back to My Courses
+            <button 
+              type="button" 
+              onClick={() => navigate(isAdmin ? "/admin/courses" : "/educator/my-courses")} 
+              className="text-sm text-blue-600 hover:underline"
+            >
+                &larr; Back to {isAdmin ? "Manage Courses" : "My Courses"}
             </button>
         </div>
 

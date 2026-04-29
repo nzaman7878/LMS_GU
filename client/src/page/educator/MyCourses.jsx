@@ -3,12 +3,12 @@ import { AppContext } from "../../context/AppContext";
 import Loading from "../../components/students/Loading";
 import axios from "axios";
 import { toast } from "react-toastify"; 
-import { useNavigate } from "react-router-dom"; // <-- Added for routing
+import { useNavigate } from "react-router-dom"; 
 
 const MyCourses = () => {
   const { currency, backendUrl, isEducator } = useContext(AppContext);
   const [courses, setCourses] = useState(null);
-  const navigate = useNavigate(); // <-- Initialize navigate
+  const navigate = useNavigate(); 
 
   const fetchEducatorCourses = async () => {
     try {
@@ -36,9 +36,8 @@ const MyCourses = () => {
     }
   };
 
-  // --- NEW: Delete Course Handler ---
   const handleDeleteCourse = async (courseId) => {
-    // Prevent accidental deletions
+
     if (!window.confirm("Are you sure you want to delete this course? This cannot be undone.")) {
       return;
     }
@@ -54,7 +53,7 @@ const MyCourses = () => {
 
       if (data.success) {
         toast.success(data.message);
-        // Remove the deleted course from the UI without refreshing the page
+      
         setCourses((prevCourses) => prevCourses.filter((course) => course._id !== courseId));
       } else {
         toast.error(data.message);
@@ -84,7 +83,7 @@ const MyCourses = () => {
               <th className='px-4 py-3 font-medium'>Earnings</th>
               <th className='px-4 py-3 font-medium'>Students</th>
               <th className='px-4 py-3 font-medium'>Published On</th>
-              {/* --- NEW: Actions Column Header --- */}
+   
               <th className='px-4 py-3 font-medium text-center'>Actions</th>
             </tr>
           </thead>

@@ -3,6 +3,7 @@ import educatorModel from "../models/educatorModel.js";
 import bcrypt from "bcrypt";
 import Admin from "../models/adminModel.js";
 import studentModel from "../models/studentModel.js";
+import Course from "../models/courseModel.js";
 
  const registerAdmin = async (req, res) => {
 
@@ -295,6 +296,34 @@ const deleteStudent = async (req, res) => {
     }
 };
 
+ const getAllCoursesAdmin = async (req, res) => {
+  try {
+ 
+    const courses = await Course.find({}).populate("educator", "name");
+    
+    res.status(200).json({ 
+        success: true, 
+        courses 
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
+ const deleteCourseAdmin = async (req, res) => {
+  try {
+    const { courseId } = req.params; 
 
-export {registerAdmin, loginAdmin, addEducator , getAllEducators , updateEducator, deleteEducator , getAllStudents , updateStudent , deleteStudent };
+    const deletedCourse = await Course.findByIdAndDelete(courseId);
+
+    if (!deletedCourse) {
+      return res.status(404).json({ success: false, message: "Course not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Course deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export {registerAdmin, loginAdmin, addEducator , getAllEducators , updateEducator, deleteEducator , getAllStudents , updateStudent , deleteStudent , getAllCoursesAdmin , deleteCourseAdmin };

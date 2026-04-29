@@ -421,9 +421,26 @@ export const updateCourse = async (req, res) => {
     const course = await courseModel.findById(courseId);
     if (!course) throw new Error("Course not found");
 
-    if (course.educator.toString() !== educatorId.toString()) {
-      throw new Error("Unauthorized: You can only update your own courses");
+    
+    const isAdmin = req.user && req.user.role === "admin";
+
+    
+    const requestUserId = isAdmin ? req.user.id : educatorId;
+
+    
+    if (!requestUserId) {
+        return res.status(401).json({ success: false, message: "Authentication failed. User ID missing." });
     }
+
+
+    if (course.educator.toString() !== requestUserId.toString() && !isAdmin) {
+        return res.status(403).json({ 
+            success: false, 
+            message: "Unauthorized: You can only update your own courses" 
+        });
+    }
+
+  
 
     let parsedData = courseData ? JSON.parse(courseData) : {};
     const getFile = (fieldname) => files.find((f) => f.fieldname === fieldname);
@@ -438,7 +455,6 @@ export const updateCourse = async (req, res) => {
       parsedData.thumbnailPublicId = thumbnailUpload.public_id;
     }
 
-
     if (parsedData.courseContent && parsedData.courseContent.length > 0) {
       parsedData.courseContent = await Promise.all(
         parsedData.courseContent.map(async (chapter) => {
@@ -446,7 +462,6 @@ export const updateCourse = async (req, res) => {
             chapter.chapterContent = await Promise.all(
               chapter.chapterContent.map(async (lecture) => {
                 
-              
                 if (lecture.videoType === "upload" && lecture.videoFileName) {
                   const videoFile = getFile(lecture.videoFileName);
                   if (videoFile) {
@@ -480,7 +495,6 @@ export const updateCourse = async (req, res) => {
       );
     }
 
-    
     const extractPublicIds = (content) => {
       let videoIds = [];
       let resourceIds = [];
@@ -500,7 +514,6 @@ export const updateCourse = async (req, res) => {
     const oldAssets = extractPublicIds(course.courseContent);
     const newAssets = extractPublicIds(parsedData.courseContent);
 
-   
     const orphanedVideos = oldAssets.videoIds.filter(id => !newAssets.videoIds.includes(id));
     const orphanedResources = oldAssets.resourceIds.filter(id => !newAssets.resourceIds.includes(id));
 

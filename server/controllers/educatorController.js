@@ -4,6 +4,8 @@ import jwt from "jsonwebtoken";
 import Course from "../models/courseModel.js";
 import { Purchase } from "../models/purchaseModel.js";
 import studentModel from "../models/studentModel.js";
+import InterviewQuestion from "../models/InterviewQuestion.js";
+import InterviewAttempt from "../models/InterviewAttempt.js";
 
 
 // LOGIN
@@ -224,6 +226,98 @@ const getEnrolledStudentsData = async (req, res) => {
   }
 };
 
+
+
+
+// CREATE A NEW INTERVIEW QUESTION
+const createInterviewQuestion = async (req, res) => {
+  try {
+    const educatorId = req.educatorId; 
+    const { questionText, idealAnswer, hint, category } = req.body;
+
+    const newQuestion = new InterviewQuestion({
+      educatorId,
+      questionText,
+      idealAnswer,
+      hint,
+      category
+    });
+
+    await newQuestion.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Interview question created successfully",
+      question: newQuestion
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// GET ALL QUESTIONS CREATED BY THIS EDUCATOR
+const getEducatorInterviewQuestions = async (req, res) => {
+  try {
+    const educatorId = req.educatorId;
+    const questions = await InterviewQuestion.find({ educatorId }).sort({ createdAt: -1 });
+
+    res.json({ success: true, questions });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// GET ALL STUDENT SUBMISSIONS FOR THIS EDUCATOR'S QUESTIONS
+const getInterviewSubmissions = async (req, res) => {
+  try {
+    const educatorId = req.educatorId;
+
+ 
+    const questions = await InterviewQuestion.find({ educatorId });
+    const questionIds = questions.map(q => q._id);
+
+   
+    const submissions = await InterviewAttempt.find({ questionId: { $in: questionIds } })
+      .populate("studentId", "name image") 
+      .populate("questionId", "questionText idealAnswer category") 
+      .sort({ createdAt: -1 }); 
+
+    res.json({ success: true, submissions });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// REVIEW AND GRADE A STUDENT'S ATTEMPT
+const reviewInterviewSubmission = async (req, res) => {
+  try {
+    const { attemptId } = req.params;
+    const { score, educatorFeedback } = req.body;
+
+    const updatedAttempt = await InterviewAttempt.findByIdAndUpdate(
+      attemptId,
+      {
+        status: "Reviewed",
+        score,
+        educatorFeedback
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedAttempt) {
+      return res.status(404).json({ success: false, message: "Submission not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Review submitted successfully",
+      attempt: updatedAttempt
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export {
   educatorLogin,
   getEducatorProfile,   
@@ -231,4 +325,8 @@ export {
   getEducatorCourses,
   educatorDashboardData,
   getEnrolledStudentsData,
+  createInterviewQuestion,
+  getEducatorInterviewQuestions,
+  getInterviewSubmissions,
+  reviewInterviewSubmission
 };

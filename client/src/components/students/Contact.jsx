@@ -50,7 +50,7 @@ const Contact = () => {
 
       if (result.success) {
         setSubmitStatus({ type: 'success', message: "Thank you! Your message has been sent successfully." });
-        setFormData({ name: '', email: '', subject: '', message: '' }); // Clear form
+        setFormData({ name: '', email: '', subject: '', message: '' }); 
       } else {
         setSubmitStatus({ type: 'error', message: "Something went wrong. Please try again later." });
       }
@@ -147,7 +147,7 @@ const Contact = () => {
                       value={formData.name}
                       onChange={handleChange}
                       required
-                      placeholder="John Doe"
+                      placeholder="Nuruz"
                       className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:bg-white transition-colors text-gray-800"
                     />
                   </div>
@@ -161,7 +161,7 @@ const Contact = () => {
                       value={formData.email}
                       onChange={handleChange}
                       required
-                      placeholder="john@example.com"
+                      placeholder="nuruz@example.com"
                       className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:bg-white transition-colors text-gray-800"
                     />
                   </div>

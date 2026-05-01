@@ -7,6 +7,7 @@ import CourseDetails from "./page/student/CourseDetails";
 import MyProfile from "./page/student/MyProfile";
 import MyEnrollments from "./page/student/MyEnrollments";
 import Player from "./page/student/Player";
+import StudentInterviews from "./page/student/StudentInterviews";
 import Loading from "./components/students/Loading";
 import About from "./components/students/About";
 import Contact from "./components/students/Contact";
@@ -18,6 +19,9 @@ import AddCourse from "./page/educator/AddCourse";
 import MyCourses from "./page/educator/MyCourses";
 import StudentsEnrolled from "./page/educator/StudentsEnrolled";
 import EditCourse from "./components/teacher/EditCourse";
+import AddInterviewQuestion from "./page/educator/AddInterviewQuestion";
+import InterviewSubmissions from "./page/educator/InterviewSubmissions";
+
 
 import AdminLogin from "./page/admin/AdminLogin";
 import Admin from "./page/admin/Admin";
@@ -58,6 +62,7 @@ function App() {
         <Route path="/loading" element={<Loading />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/about" element={<About />} />
+        <Route path="/interviews" element={<StudentInterviews />} />
 
         <Route path="/educator" element={<Educator />}>
           <Route index element={<EducatorDashboard />} />
@@ -70,6 +75,8 @@ function App() {
           <Route path="students-enrolled" element={<StudentsEnrolled />} />
 
           <Route path="my-profile" element={<EducatorMyProfile />} />
+      <Route path="add-interview" element={<AddInterviewQuestion />} />
+      <Route path="interview-submissions" element={<InterviewSubmissions />} />
         </Route>
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/admin" element={<Admin />}>

@@ -10,7 +10,8 @@ import courseModel from "../models/courseModel.js";
 import cloudinary from "../config/cloudinary.js";
 
 import { Purchase } from "../models/purchaseModel.js";
-
+import InterviewQuestion from "../models/InterviewQuestion.js";
+import InterviewAttempt from "../models/InterviewAttempt.js";
 
 
 //  Register Student
@@ -579,6 +580,88 @@ const submitQuizScore = async (req, res) => {
   }
 };
 
+
+// GET AVAILABLE INTERVIEW QUESTIONS
+const getStudentInterviews = async (req, res) => {
+  try {
+    const { category } = req.query;
+    
+    // If a specific category is requested, filter by it. Otherwise, fetch all.
+    let query = {};
+    if (category && category !== 'All') {
+      query.category = category;
+    }
+
+    // CRITICAL: We use .select("-idealAnswer") so the correct answer 
+    // doesn't leak to the student's browser network tab!
+    const questions = await InterviewQuestion.find(query)
+      .select("-idealAnswer")
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, questions });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// SUBMIT AN INTERVIEW ANSWER
+
+const submitInterviewAttempt = async (req, res) => {
+  try {
+ 
+    const studentId = req.auth?.userId || req.auth?.id || req.body.studentId; 
+    
+    const { questionId, category, submittedAnswer } = req.body;
+
+   
+    if (!studentId) {
+      return res.status(401).json({ success: false, message: "Authentication failed. Student ID missing." });
+    }
+
+    if (!questionId || !submittedAnswer) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
+    const newAttempt = new InterviewAttempt({
+      studentId,
+      questionId,
+      category,
+      submittedAnswer
+    });
+
+    await newAttempt.save();
+
+    res.status(201).json({ 
+      success: true, 
+      message: "Answer submitted successfully", 
+      attempt: newAttempt 
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const getMyInterviewAttempts = async (req, res) => {
+  try {
+    const studentId = req.auth?.userId || req.auth?.id;
+
+    if (!studentId) {
+      return res.status(401).json({ success: false, message: "Authentication failed." });
+    }
+
+    // Find all attempts by this student and pull in the actual question details
+    // (This allows the student to see the question text and idealAnswer after submitting)
+    const attempts = await InterviewAttempt.find({ studentId })
+      .populate('questionId', 'questionText idealAnswer')
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, attempts });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 export {
   registerStudent,
   loginStudent,
@@ -590,5 +673,8 @@ export {
   addUserRating,
   updateStudentProfile,
   enrollFreeCourse,
-  submitQuizScore
+  submitQuizScore,
+  getStudentInterviews,
+  submitInterviewAttempt,
+  getMyInterviewAttempts
 };

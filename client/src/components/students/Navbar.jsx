@@ -11,7 +11,6 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
-
   const adminToken = localStorage.getItem('adminToken');
 
   const isCourseListPage = location.pathname === "/courses";
@@ -22,12 +21,14 @@ const Navbar = () => {
     navigate('/');
   };
 
+  // ✅ UPDATED NAV LINKS
   const navLinks = [
     { name: "Home", path: "/" },
     {
       name: student ? "My Courses" : "Courses",
       path: student ? "/my-enrollments" : "/course-list",
     },
+    { name: "Interviews", path: "/interviews" }, // <-- Added Interviews Here
     ...(student ? [{ name: "Dashboard", path: "/student/dashboard" }] : []),
     { name: "About", path: "/about" },
     { name: "Contact", path: "/contact" },

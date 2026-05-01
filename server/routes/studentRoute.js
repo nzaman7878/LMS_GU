@@ -11,7 +11,10 @@ import {
   addUserRating ,
   updateStudentProfile ,
   enrollFreeCourse,
-  submitQuizScore
+  submitQuizScore,
+  getStudentInterviews,
+  submitInterviewAttempt,
+  getMyInterviewAttempts
 
 } from "../controllers/studentController.js";
 
@@ -43,5 +46,12 @@ studentRouter.put(
 );
 studentRouter.post("/enroll-free", authStudent, enrollFreeCourse);
 studentRouter.post("/submit-quiz", authStudent, submitQuizScore);
+
+
+studentRouter.get("/interviews", authStudent, getStudentInterviews);
+
+
+studentRouter.post("/interviews/attempt", authStudent, submitInterviewAttempt);
+studentRouter.get("/interviews/my-attempts", authStudent, getMyInterviewAttempts);
 
 export default studentRouter;

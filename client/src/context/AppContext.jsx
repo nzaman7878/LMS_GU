@@ -139,13 +139,22 @@ const registerStudent = async (name, email, password) => {
   }
 };
 
-  const loginStudent = async (email, password) => {
+ const loginStudent = async (email, password) => {
     try {
       const { data } = await axios.post(`${backendUrl}/api/students/login`, { email, password });
+      
       if (data.success && data.token) {
         localStorage.setItem("studentToken", data.token);
+        
+     
         setStudent(data.student);
+        
+      
+        await fetchStudentProfile(data.token);
+        
+        
         fetchUserEnrolledCourses(); 
+        
         return { success: true };
       }
       return { success: false, message: data.message };

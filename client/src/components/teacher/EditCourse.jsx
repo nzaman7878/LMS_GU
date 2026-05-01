@@ -12,8 +12,7 @@ const EditCourse = () => {
   const { backendUrl, isEducator } = useContext(AppContext);
   const { courseId } = useParams(); 
   const navigate = useNavigate();
-  
-  // --- Check for Admin Role ---
+
   const adminToken = localStorage.getItem("adminToken");
   const isAdmin = !!adminToken;
   const hasAccess = isEducator || isAdmin;

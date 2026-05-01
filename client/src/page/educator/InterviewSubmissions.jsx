@@ -59,8 +59,7 @@ const InterviewSubmissions = () => {
 
       if (response.data.success) {
         toast.success("Review submitted successfully!");
-        
-        // Update the local state so the UI reflects the change without reloading
+   
         setSubmissions(prev => 
           prev.map(sub => 
             sub._id === attemptId 
@@ -69,7 +68,7 @@ const InterviewSubmissions = () => {
           )
         );
         
-        // Close the inline form and clear state
+       
         setReviewingId(null);
         setScore('');
         setFeedback('');
@@ -108,7 +107,6 @@ const InterviewSubmissions = () => {
           {submissions.map((sub) => (
             <div key={sub._id} className="bg-white rounded-lg shadow-sm border p-6 flex flex-col gap-4">
               
-              {/* Header: Student Info & Status */}
               <div className="flex justify-between items-start border-b pb-4">
                 <div className="flex items-center gap-3">
                   <img 
@@ -132,7 +130,6 @@ const InterviewSubmissions = () => {
                 </div>
               </div>
 
-              {/* Q & A Section */}
               <div>
                 <p className="text-sm font-bold text-gray-700 mb-1">Question:</p>
                 <p className="text-gray-800 bg-gray-50 p-3 rounded border text-sm">{sub.questionId?.questionText}</p>
@@ -145,7 +142,6 @@ const InterviewSubmissions = () => {
                 </p>
               </div>
 
-              {/* Educator's Ideal Answer (For reference) */}
               <details className="text-sm text-gray-500 cursor-pointer mb-2">
                 <summary className="font-medium hover:text-indigo-600 transition-colors">Show Ideal Answer (Reference)</summary>
                 <div className="mt-2 p-3 bg-gray-100 border rounded text-gray-700 cursor-text">
@@ -153,7 +149,7 @@ const InterviewSubmissions = () => {
                 </div>
               </details>
 
-              {/* Review Section */}
+           
               {sub.status === 'Reviewed' ? (
                 <div className="bg-green-50 p-4 rounded-lg border border-green-200 mt-2">
                   <p className="text-sm font-bold text-green-800 mb-1">Your Feedback (Score: {sub.score}/10)</p>

@@ -19,6 +19,7 @@ import AddCourse from "./page/educator/AddCourse";
 import MyCourses from "./page/educator/MyCourses";
 import StudentsEnrolled from "./page/educator/StudentsEnrolled";
 import EditCourse from "./components/teacher/EditCourse";
+import InterviewManagement from "./page/educator/InterviewManagement";
 import AddInterviewQuestion from "./page/educator/AddInterviewQuestion";
 import InterviewSubmissions from "./page/educator/InterviewSubmissions";
 
@@ -75,6 +76,7 @@ function App() {
           <Route path="students-enrolled" element={<StudentsEnrolled />} />
 
           <Route path="my-profile" element={<EducatorMyProfile />} />
+          <Route path="interviews" element={<InterviewManagement />} />
       <Route path="add-interview" element={<AddInterviewQuestion />} />
       <Route path="interview-submissions" element={<InterviewSubmissions />} />
         </Route>

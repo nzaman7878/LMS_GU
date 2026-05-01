@@ -21,7 +21,6 @@ const Navbar = () => {
     navigate('/');
   };
 
-  // ✅ UPDATED NAV LINKS
   const navLinks = [
     { name: "Home", path: "/" },
     {

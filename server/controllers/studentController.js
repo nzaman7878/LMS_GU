@@ -581,19 +581,15 @@ const submitQuizScore = async (req, res) => {
 };
 
 
-// GET AVAILABLE INTERVIEW QUESTIONS
 const getStudentInterviews = async (req, res) => {
   try {
     const { category } = req.query;
     
-    // If a specific category is requested, filter by it. Otherwise, fetch all.
     let query = {};
     if (category && category !== 'All') {
       query.category = category;
     }
 
-    // CRITICAL: We use .select("-idealAnswer") so the correct answer 
-    // doesn't leak to the student's browser network tab!
     const questions = await InterviewQuestion.find(query)
       .select("-idealAnswer")
       .sort({ createdAt: -1 });
@@ -604,7 +600,7 @@ const getStudentInterviews = async (req, res) => {
   }
 };
 
-// SUBMIT AN INTERVIEW ANSWER
+
 
 const submitInterviewAttempt = async (req, res) => {
   try {
@@ -649,8 +645,6 @@ const getMyInterviewAttempts = async (req, res) => {
       return res.status(401).json({ success: false, message: "Authentication failed." });
     }
 
-    // Find all attempts by this student and pull in the actual question details
-    // (This allows the student to see the question text and idealAnswer after submitting)
     const attempts = await InterviewAttempt.find({ studentId })
       .populate('questionId', 'questionText idealAnswer')
       .sort({ createdAt: -1 });

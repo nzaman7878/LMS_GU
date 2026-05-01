@@ -6,31 +6,31 @@ import { toast } from 'react-toastify';
 const StudentInterviews = () => {
   const { backendUrl, student } = useContext(AppContext);
   
-  // Data States
+ 
   const [questions, setQuestions] = useState([]);
   const [myAttempts, setMyAttempts] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // UI States
+ 
   const [activeTab, setActiveTab] = useState('practice'); 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const categories = ['All', 'Web Dev', 'AI/ML', 'Data Science', 'App Dev', 'Soft Skills'];
 
-  // Modal States
+ 
   const [activeQuestion, setActiveQuestion] = useState(null);
   const [answerText, setAnswerText] = useState('');
   const [showHint, setShowHint] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 1. Fetch attempts once when the student loads so we know what they've already answered
+  
   useEffect(() => {
     if (student) {
       fetchMyAttempts();
     }
   }, [student]);
 
-  // 2. Fetch questions whenever the category changes
+  
   useEffect(() => {
     if (student) {
       fetchQuestions();
@@ -99,7 +99,7 @@ const StudentInterviews = () => {
       if (response.data.success) {
         toast.success("Answer submitted! You can now view the ideal answer in the Submissions tab.");
         closeModal();
-        await fetchMyAttempts(); // Re-fetch attempts so the button updates to "Attempted"
+        await fetchMyAttempts(); 
         setActiveTab('submissions'); 
       } else {
         toast.error(response.data.message);
@@ -149,7 +149,6 @@ const StudentInterviews = () => {
         </div>
       </div>
 
-      {/* MAIN CONTENT AREA */}
       <div className="flex-1 p-4 md:p-8 overflow-y-auto">
         <div className="max-w-5xl mx-auto">
           
@@ -159,7 +158,7 @@ const StudentInterviews = () => {
               <p className="text-gray-600 mt-1">Master your skills with educator feedback.</p>
             </div>
 
-            {/* SEARCH BAR */}
+       
             {activeTab === 'practice' && (
               <div className="w-full md:w-72 relative">
                 <input 
@@ -189,7 +188,6 @@ const StudentInterviews = () => {
             </button>
           </div>
 
-          {/* CONTENT: PRACTICE TAB */}
           {activeTab === 'practice' && (
             loading ? <div className="text-gray-500 mt-10">Loading questions...</div> :
             filteredQuestions.length === 0 ? (
@@ -197,7 +195,7 @@ const StudentInterviews = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {filteredQuestions.map((q, index) => {
-                  // CHECK IF ATTEMPTED
+                 
                   const isAttempted = myAttempts.some(attempt => attempt.questionId?._id === q._id);
 
                   return (
@@ -230,7 +228,6 @@ const StudentInterviews = () => {
             )
           )}
 
-          {/* CONTENT: MY SUBMISSIONS TAB */}
           {activeTab === 'submissions' && (
             myAttempts.length === 0 ? (
               <div className="bg-white p-10 rounded-xl border text-center text-gray-500">You haven't submitted any answers yet.</div>
@@ -238,7 +235,7 @@ const StudentInterviews = () => {
               <div className="flex flex-col gap-6">
                 {myAttempts.map((attempt, index) => {
                   const isReviewed = attempt.status === 'Reviewed';
-                  // Define "wrong" as a score less than 5 out of 10
+                
                   const isWrong = isReviewed && attempt.score < 5;
 
                   return (
@@ -269,7 +266,7 @@ const StudentInterviews = () => {
                         <p className="text-gray-800 bg-gray-100 p-3 rounded border border-gray-200 text-sm mt-1 whitespace-pre-wrap">{attempt.questionId?.idealAnswer}</p>
                       </div>
 
-                      {/* CONDITIONAL RED/GREEN EDUCATOR FEEDBACK */}
+                  
                       {isReviewed && (
                         <div className={`mt-6 border p-4 rounded-lg ${isWrong ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
                           <div className="flex justify-between items-center mb-2">
@@ -294,7 +291,6 @@ const StudentInterviews = () => {
         </div>
       </div>
 
-      {/* ATTEMPT MODAL */}
       {activeQuestion && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">

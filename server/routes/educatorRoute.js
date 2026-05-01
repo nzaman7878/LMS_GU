@@ -10,7 +10,9 @@ import {
   createInterviewQuestion,
   getEducatorInterviewQuestions,
   getInterviewSubmissions,
-  reviewInterviewSubmission
+  reviewInterviewSubmission,
+  updateInterviewQuestion,
+  deleteInterviewQuestion
 } from "../controllers/educatorController.js";
 import upload from '../middleware/multer.js';
 import authEducator from "../middleware/authEducator.js";
@@ -37,5 +39,7 @@ educatorRouter.get("/interviews/submissions", authEducator, getInterviewSubmissi
 
 
 educatorRouter.put("/interviews/submissions/:attemptId/review", authEducator, reviewInterviewSubmission);
+educatorRouter.put("/interviews/:questionId", authEducator, updateInterviewQuestion);
+educatorRouter.delete("/interviews/:questionId", authEducator, deleteInterviewQuestion);
 
 export default educatorRouter;

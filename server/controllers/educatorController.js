@@ -79,7 +79,7 @@ const getEducatorProfile = async (req, res) => {
   }
 };
 
-// UPDATE EDUCATOR PROFILE
+
 import { v2 as cloudinary } from 'cloudinary';
 
 const updateEducatorProfile = async (req, res) => {
@@ -88,7 +88,7 @@ const updateEducatorProfile = async (req, res) => {
     const { name, subject, qualification, experience, about } = req.body;
     const imageFile = req.file; // This comes from multer middleware
 
-    // Create an update object with the text fields
+   
     const updateData = {
       name,
       subject,
@@ -97,7 +97,7 @@ const updateEducatorProfile = async (req, res) => {
       about
     };
 
-    // If a new image file is uploaded, process it with Cloudinary
+   
     if (imageFile) {
       const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
         resource_type: "image",
@@ -105,7 +105,7 @@ const updateEducatorProfile = async (req, res) => {
       updateData.image = imageUpload.secure_url;
     }
 
-    // Find and update the educator
+    
     const updatedEducator = await educatorModel.findByIdAndUpdate(
       educatorId,
       updateData,
@@ -318,6 +318,58 @@ const reviewInterviewSubmission = async (req, res) => {
   }
 };
 
+const updateInterviewQuestion = async (req, res) => {
+  try {
+    const { questionId } = req.params;
+    const educatorId = req.educatorId; // From auth middleware
+    const { questionText, idealAnswer, hint, category } = req.body;
+
+ 
+    const updatedQuestion = await InterviewQuestion.findOneAndUpdate(
+      { _id: questionId, educatorId: educatorId }, 
+      { questionText, idealAnswer, hint, category },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedQuestion) {
+      return res.status(404).json({ success: false, message: "Question not found or you are not authorized to edit it." });
+    }
+
+    res.json({
+      success: true,
+      message: "Question updated successfully",
+      question: updatedQuestion
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const deleteInterviewQuestion = async (req, res) => {
+  try {
+    const { questionId } = req.params;
+    const educatorId = req.educatorId;
+
+    const deletedQuestion = await InterviewQuestion.findOneAndDelete({ 
+      _id: questionId, 
+      educatorId: educatorId 
+    });
+
+    if (!deletedQuestion) {
+      return res.status(404).json({ success: false, message: "Question not found or you are not authorized to delete it." });
+    }
+
+    await InterviewAttempt.deleteMany({ questionId: questionId });
+
+    res.json({
+      success: true,
+      message: "Question and all associated student attempts have been deleted."
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export {
   educatorLogin,
   getEducatorProfile,   
@@ -328,5 +380,7 @@ export {
   createInterviewQuestion,
   getEducatorInterviewQuestions,
   getInterviewSubmissions,
-  reviewInterviewSubmission
+  reviewInterviewSubmission,
+  updateInterviewQuestion,
+  deleteInterviewQuestion
 };

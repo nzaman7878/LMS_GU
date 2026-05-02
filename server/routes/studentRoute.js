@@ -19,6 +19,7 @@ import {
   deleteStudentDoubt, editStudentDoubt, deleteStudentReply, editStudentReply
 
 } from "../controllers/studentController.js";
+import { askChatbot } from "../controllers/chatController.js";
 
 import authStudent from "../middleware/authStudent.js";
 
@@ -62,5 +63,6 @@ studentRouter.delete("/doubts/:doubtId", authStudent, deleteStudentDoubt);
 studentRouter.put("/doubts/:doubtId", authStudent, editStudentDoubt);
 studentRouter.delete("/doubts/:doubtId/reply/:replyId", authStudent, deleteStudentReply);
 studentRouter.put("/doubts/:doubtId/reply/:replyId", authStudent, editStudentReply);
+studentRouter.post("/chatbot/ask", authStudent, askChatbot);
 
 export default studentRouter;

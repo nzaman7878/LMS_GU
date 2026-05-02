@@ -36,6 +36,7 @@ import ManageEducators from "./page/admin/ManageEducators";
 import Navbar from "./components/students/Navbar";
 import StudentLogin from "./page/student/StudentLogin";
 import StudentDashboard from "./page/student/StudentDashboard";
+import Chatbot from "./components/students/Chatbot";
 import { ToastContainer } from "react-toastify";
 
 import "quill/dist/quill.snow.css";
@@ -96,6 +97,7 @@ function App() {
 
         <Route path="*" element={<h1>404 Not Found</h1>} />
       </Routes>
+      <Chatbot/>
     </div>
   );
 }

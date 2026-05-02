@@ -14,7 +14,9 @@ import {
   submitQuizScore,
   getStudentInterviews,
   submitInterviewAttempt,
-  getMyInterviewAttempts
+  getMyInterviewAttempts,
+  getLectureDoubts, askDoubt, replyToDoubt,
+  deleteStudentDoubt, editStudentDoubt, deleteStudentReply, editStudentReply
 
 } from "../controllers/studentController.js";
 
@@ -53,5 +55,12 @@ studentRouter.get("/interviews", authStudent, getStudentInterviews);
 
 studentRouter.post("/interviews/attempt", authStudent, submitInterviewAttempt);
 studentRouter.get("/interviews/my-attempts", authStudent, getMyInterviewAttempts);
+studentRouter.get("/doubts/:courseId/:lectureId", getLectureDoubts); 
+studentRouter.post("/doubts/ask", authStudent, askDoubt);
+studentRouter.post("/doubts/:doubtId/reply", replyToDoubt); 
+studentRouter.delete("/doubts/:doubtId", authStudent, deleteStudentDoubt);
+studentRouter.put("/doubts/:doubtId", authStudent, editStudentDoubt);
+studentRouter.delete("/doubts/:doubtId/reply/:replyId", authStudent, deleteStudentReply);
+studentRouter.put("/doubts/:doubtId/reply/:replyId", authStudent, editStudentReply);
 
 export default studentRouter;

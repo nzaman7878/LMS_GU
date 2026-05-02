@@ -12,6 +12,7 @@ import cloudinary from "../config/cloudinary.js";
 import { Purchase } from "../models/purchaseModel.js";
 import InterviewQuestion from "../models/InterviewQuestion.js";
 import InterviewAttempt from "../models/InterviewAttempt.js";
+import Doubt from "../models/Doubt.js";
 
 
 //  Register Student
@@ -655,6 +656,135 @@ const getMyInterviewAttempts = async (req, res) => {
   }
 };
 
+// GET ALL DOUBTS FOR A LECTURE
+const getLectureDoubts = async (req, res) => {
+  try {
+    const { courseId, lectureId } = req.params;
+    const doubts = await Doubt.find({ courseId, lectureId }).sort({ createdAt: -1 });
+    res.json({ success: true, doubts });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// STUDENT ASKS A NEW DOUBT
+const askDoubt = async (req, res) => {
+  try {
+    const studentId = req.auth?.userId || req.auth?.id || req.body.studentId;
+    const { courseId, lectureId, studentName, questionText } = req.body;
+
+    const newDoubt = new Doubt({
+      courseId, lectureId, studentId, studentName, questionText
+    });
+
+    await newDoubt.save();
+    res.status(201).json({ success: true, doubt: newDoubt });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ANYONE REPLIES TO A DOUBT
+const replyToDoubt = async (req, res) => {
+  try {
+    const { doubtId } = req.params;
+
+    const { userId, userType, name, text } = req.body; 
+
+    const doubt = await Doubt.findById(doubtId);
+    if (!doubt) return res.status(404).json({ success: false, message: "Doubt not found" });
+
+    doubt.replies.push({ userId, userType, name, text });
+    await doubt.save();
+
+    res.json({ success: true, doubt });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+const deleteStudentDoubt = async (req, res) => {
+  try {
+    const { doubtId } = req.params;
+    const studentId = req.auth?.userId || req.auth?.id || req.body.studentId;
+
+    const deletedDoubt = await Doubt.findOneAndDelete({ _id: doubtId, studentId: studentId });
+
+    if (!deletedDoubt) {
+      return res.status(404).json({ success: false, message: "Question not found or you are not authorized to delete it." });
+    }
+
+    res.json({ success: true, message: "Question deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// EDIT THEIR OWN DOUBT
+const editStudentDoubt = async (req, res) => {
+  try {
+    const { doubtId } = req.params;
+    const studentId = req.auth?.userId || req.auth?.id || req.body.studentId;
+    const { questionText } = req.body;
+
+    const updatedDoubt = await Doubt.findOneAndUpdate(
+      { _id: doubtId, studentId: studentId },
+      { questionText },
+      { new: true }
+    );
+
+    if (!updatedDoubt) {
+      return res.status(404).json({ success: false, message: "Question not found or unauthorized." });
+    }
+
+    res.json({ success: true, message: "Question updated", doubt: updatedDoubt });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// DELETE THEIR OWN REPLY
+const deleteStudentReply = async (req, res) => {
+  try {
+    const { doubtId, replyId } = req.params;
+    const studentId = req.auth?.userId || req.auth?.id || req.body.studentId;
+
+  
+    const updatedDoubt = await Doubt.findOneAndUpdate(
+      { _id: doubtId },
+      { $pull: { replies: { _id: replyId, userId: studentId } } },
+      { new: true }
+    );
+
+    res.json({ success: true, message: "Reply deleted successfully", doubt: updatedDoubt });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// EDIT THEIR OWN REPLY
+const editStudentReply = async (req, res) => {
+  try {
+    const { doubtId, replyId } = req.params;
+    const studentId = req.auth?.userId || req.auth?.id || req.body.studentId;
+    const { text } = req.body;
+
+    const updatedDoubt = await Doubt.findOneAndUpdate(
+      { _id: doubtId, "replies._id": replyId, "replies.userId": studentId },
+      { $set: { "replies.$.text": text } },
+      { new: true }
+    );
+
+    if (!updatedDoubt) {
+      return res.status(404).json({ success: false, message: "Reply not found or unauthorized." });
+    }
+
+    res.json({ success: true, message: "Reply updated successfully", doubt: updatedDoubt });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 export {
   registerStudent,
@@ -670,5 +800,7 @@ export {
   submitQuizScore,
   getStudentInterviews,
   submitInterviewAttempt,
-  getMyInterviewAttempts
+  getMyInterviewAttempts,
+  getLectureDoubts, askDoubt, replyToDoubt,
+  deleteStudentDoubt, editStudentDoubt, deleteStudentReply, editStudentReply
 };

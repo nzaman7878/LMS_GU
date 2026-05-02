@@ -22,6 +22,7 @@ import EditCourse from "./components/teacher/EditCourse";
 import InterviewManagement from "./page/educator/InterviewManagement";
 import AddInterviewQuestion from "./page/educator/AddInterviewQuestion";
 import InterviewSubmissions from "./page/educator/InterviewSubmissions";
+import EducatorDoubts from "./page/educator/EducatorDoubts";
 
 
 import AdminLogin from "./page/admin/AdminLogin";
@@ -79,6 +80,8 @@ function App() {
           <Route path="interviews" element={<InterviewManagement />} />
       <Route path="add-interview" element={<AddInterviewQuestion />} />
       <Route path="interview-submissions" element={<InterviewSubmissions />} />
+    
+        <Route path="qna" element={<EducatorDoubts />} />
         </Route>
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/admin" element={<Admin />}>

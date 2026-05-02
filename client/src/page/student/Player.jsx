@@ -9,6 +9,7 @@ import YouTube from "react-youtube";
 import { assets } from "../../assets/assets";
 
 import TakeQuiz from "../../components/students/TakeQuiz";
+import DoubtSection from "../../components/students/DoubtSection";
 
 const Player = () => {
   const {
@@ -295,74 +296,83 @@ const Player = () => {
           </div>
         </div>
 
-        <div className="md:sticky md:top-10 h-fit">
-          {playerData ? (
-            <div className="bg-white rounded shadow-lg p-2">
-              {playerData.contentType === "quiz" ? (
-                <TakeQuiz
-                  quiz={playerData}
-                  courseId={courseId}
-                  progressData={progressData}
-                  getCourseProgress={getCourseProgress}
-                  backendUrl={backendUrl}
-                />
-              ) : (
-                <>
-                  {playerData.videoType === "youtube" ? (
-                    <YouTube
-                      videoId={getYouTubeId(playerData.youtubeUrl)}
-                      opts={{ playerVars: { autoplay: 1 } }}
-                      iframeClassName="w-full aspect-video"
-                    />
-                  ) : (
-                    <video
-                      src={playerData.videoUrl}
-                      controls
-                      autoPlay
-                      className="w-full rounded"
-                    />
-                  )}
+        <div className="h-fit">
+         
+          <div className="md:sticky md:top-10">
+            {playerData ? (
+              <div className="bg-white rounded shadow-lg p-2">
+                {playerData.contentType === "quiz" ? (
+                  <TakeQuiz
+                    quiz={playerData}
+                    courseId={courseId}
+                    progressData={progressData}
+                    getCourseProgress={getCourseProgress}
+                    backendUrl={backendUrl}
+                  />
+                ) : (
+                  <>
+                    {playerData.videoType === "youtube" ? (
+                      <YouTube
+                        videoId={getYouTubeId(playerData.youtubeUrl)}
+                        opts={{ playerVars: { autoplay: 1 } }}
+                        iframeClassName="w-full aspect-video"
+                      />
+                    ) : (
+                      <video
+                        src={playerData.videoUrl}
+                        controls
+                        autoPlay
+                        className="w-full rounded"
+                      />
+                    )}
 
-                  <div className="flex justify-between items-center mt-4 px-2 pb-2">
-                    <p className="font-bold text-gray-800">
-                      {playerData.chapter}.{playerData.lecture}{" "}
-                      {playerData.lectureTitle}
-                    </p>
+                    <div className="flex justify-between items-center mt-4 px-2 pb-2">
+                      <p className="font-bold text-gray-800">
+                        {playerData.chapter}.{playerData.lecture}{" "}
+                        {playerData.lectureTitle}
+                      </p>
 
-                    <button
-                      onClick={() =>
-                        markLectureAsCompleted(playerData.lectureId)
-                      }
-                      className={`font-medium px-3 py-1.5 rounded-md transition ${
-                        progressData?.lectureCompleted?.includes(
+                      <button
+                        onClick={() =>
+                          markLectureAsCompleted(playerData.lectureId)
+                        }
+                        className={`font-medium px-3 py-1.5 rounded-md transition ${
+                          progressData?.lectureCompleted?.includes(
+                            playerData.lectureId,
+                          )
+                            ? "bg-green-50 text-green-600"
+                            : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                        }`}
+                      >
+                        {progressData?.lectureCompleted?.includes(
                           playerData.lectureId,
                         )
-                          ? "bg-green-50 text-green-600"
-                          : "bg-blue-50 text-blue-600 hover:bg-blue-100"
-                      }`}
-                    >
-                      {progressData?.lectureCompleted?.includes(
-                        playerData.lectureId,
-                      )
-                        ? "✓ Completed"
-                        : "Mark Complete"}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="w-full aspect-video bg-gray-100 rounded shadow flex items-center justify-center relative overflow-hidden group">
-              <img
-                src={courseData?.courseThumbnail}
-                className="w-full h-full object-cover opacity-60"
-                alt=""
-              />
-              <p className="absolute text-gray-700 font-semibold bg-white/80 px-4 py-2 rounded-lg shadow-sm backdrop-blur-sm">
-                Select a lecture or quiz to start learning
-              </p>
-            </div>
-          )}
+                          ? "✓ Completed"
+                          : "Mark Complete"}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="w-full aspect-video bg-gray-100 rounded shadow flex items-center justify-center relative overflow-hidden group">
+                <img
+                  src={courseData?.courseThumbnail}
+                  className="w-full h-full object-cover opacity-60"
+                  alt=""
+                />
+                <p className="absolute text-gray-700 font-semibold bg-white/80 px-4 py-2 rounded-lg shadow-sm backdrop-blur-sm">
+                  Select a lecture or quiz to start learning
+                </p>
+              </div>
+            )}
+
+            
+            {playerData && playerData.contentType === "video" && (
+              <DoubtSection courseId={courseId} lectureId={playerData.lectureId} />
+            )}
+            
+          </div>
         </div>
       </div>
 

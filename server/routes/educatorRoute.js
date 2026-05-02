@@ -12,7 +12,12 @@ import {
   getInterviewSubmissions,
   reviewInterviewSubmission,
   updateInterviewQuestion,
-  deleteInterviewQuestion
+  deleteInterviewQuestion,
+    getEducatorDoubts,
+  replyToStudentDoubt,
+  deleteDoubt,
+  editDoubtReply,
+  deleteDoubtReply
 } from "../controllers/educatorController.js";
 import upload from '../middleware/multer.js';
 import authEducator from "../middleware/authEducator.js";
@@ -41,5 +46,9 @@ educatorRouter.get("/interviews/submissions", authEducator, getInterviewSubmissi
 educatorRouter.put("/interviews/submissions/:attemptId/review", authEducator, reviewInterviewSubmission);
 educatorRouter.put("/interviews/:questionId", authEducator, updateInterviewQuestion);
 educatorRouter.delete("/interviews/:questionId", authEducator, deleteInterviewQuestion);
-
+educatorRouter.get("/doubts", authEducator, getEducatorDoubts);
+educatorRouter.post("/doubts/:doubtId/reply", authEducator, replyToStudentDoubt);
+educatorRouter.delete("/doubts/:doubtId", authEducator, deleteDoubt);
+educatorRouter.put("/doubts/:doubtId/reply/:replyId", authEducator, editDoubtReply);
+educatorRouter.delete("/doubts/:doubtId/reply/:replyId", authEducator, deleteDoubtReply);
 export default educatorRouter;

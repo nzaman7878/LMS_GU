@@ -6,6 +6,7 @@ import { Purchase } from "../models/purchaseModel.js";
 import studentModel from "../models/studentModel.js";
 import InterviewQuestion from "../models/InterviewQuestion.js";
 import InterviewAttempt from "../models/InterviewAttempt.js";
+import Doubt from "../models/Doubt.js";
 
 
 // LOGIN
@@ -370,6 +371,104 @@ const deleteInterviewQuestion = async (req, res) => {
   }
 };
 
+const getEducatorDoubts = async (req, res) => {
+  try {
+    const educatorId = req.educatorId; 
+
+    const courses = await Course.find({ educator: educatorId });
+    const courseIds = courses.map(course => course._id);
+
+    const doubts = await Doubt.find({ courseId: { $in: courseIds } })
+      .populate('courseId', 'courseTitle')
+      .sort({ createdAt: -1 }); 
+
+    res.json({ success: true, doubts });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+const replyToStudentDoubt = async (req, res) => {
+  try {
+    const { doubtId } = req.params;
+    const { text, name } = req.body;
+    const educatorId = req.educatorId;
+
+    const doubt = await Doubt.findById(doubtId);
+    if (!doubt) {
+      return res.status(404).json({ success: false, message: "Doubt not found" });
+    }
+
+    
+    doubt.replies.push({
+      userId: educatorId,
+      userType: 'Educator',
+      name: name || "Educator",
+      text: text
+    });
+
+    await doubt.save();
+
+    res.json({ success: true, message: "Reply posted successfully", doubt });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+const deleteDoubt = async (req, res) => {
+  try {
+    const { doubtId } = req.params;
+    const deletedDoubt = await Doubt.findByIdAndDelete(doubtId);
+
+    if (!deletedDoubt) {
+      return res.status(404).json({ success: false, message: "Doubt not found" });
+    }
+
+    res.json({ success: true, message: "Question thread deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const editDoubtReply = async (req, res) => {
+  try {
+    const { doubtId, replyId } = req.params;
+    const { text } = req.body;
+
+
+    const updatedDoubt = await Doubt.findOneAndUpdate(
+      { _id: doubtId, "replies._id": replyId },
+      { $set: { "replies.$.text": text } },
+      { new: true }
+    ).populate('courseId', 'courseTitle');
+
+    res.json({ success: true, message: "Reply updated successfully", doubt: updatedDoubt });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+const deleteDoubtReply = async (req, res) => {
+  try {
+    const { doubtId, replyId } = req.params;
+
+   
+    const updatedDoubt = await Doubt.findByIdAndUpdate(
+      doubtId,
+      { $pull: { replies: { _id: replyId } } },
+      { new: true }
+    ).populate('courseId', 'courseTitle');
+
+    res.json({ success: true, message: "Reply deleted successfully", doubt: updatedDoubt });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 export {
   educatorLogin,
   getEducatorProfile,   
@@ -382,5 +481,10 @@ export {
   getInterviewSubmissions,
   reviewInterviewSubmission,
   updateInterviewQuestion,
-  deleteInterviewQuestion
+  deleteInterviewQuestion,
+  getEducatorDoubts,
+  replyToStudentDoubt,
+  deleteDoubt,
+  editDoubtReply,
+  deleteDoubtReply
 };

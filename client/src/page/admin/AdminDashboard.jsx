@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AppContext } from '../../context/AppContext'; 
-import { useNavigate } from 'react-router-dom'; // 1. Import useNavigate
+import { useNavigate } from 'react-router-dom'; 
+import Navbar from '../../components/students/Navbar';
 
 const AdminDashboard = () => {
   const { backendUrl, currency } = useContext(AppContext);
@@ -57,6 +58,7 @@ const AdminDashboard = () => {
 
   return (
     <div>
+    
       <h2 className='text-2xl font-bold text-gray-700 mb-6'>Dashboard Overview</h2>
       
       

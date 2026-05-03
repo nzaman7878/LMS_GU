@@ -72,7 +72,7 @@ const CourseList = () => {
       
 
     </div>
-    <Footer />
+  
     </>
   )
 }

@@ -103,11 +103,19 @@ const Contact = () => {
                   <div className="w-12 h-12 bg-cyan-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mr-4 flex-shrink-0 border border-cyan-100">
                     ✉️
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-800 mb-1">Email Us</h4>
-                    <p className="text-gray-600 text-sm md:text-base mb-1">support@lms.gauhati.ac.in</p>
-                    <p className="text-gray-500 text-xs">For technical support</p>
-                  </div>
+                 <div>
+  <h4 className="font-semibold text-gray-800 mb-1">Email Us</h4>
+  
+ 
+  <a 
+    href="mailto:support@lms.gauhati.ac.in" 
+    className="text-gray-600 text-sm md:text-base mb-1 block hover:text-blue-600 hover:underline transition-colors"
+  >
+    support@lms.gauhati.ac.in
+  </a>
+  
+  <p className="text-gray-500 text-xs">For technical support</p>
+</div>
                 </div>
 
                 <div className="flex items-start">

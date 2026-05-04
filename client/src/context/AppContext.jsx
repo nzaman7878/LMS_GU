@@ -163,6 +163,32 @@ const registerStudent = async (name, email, password) => {
     }
   };
 
+  const googleLoginStudent = async (googleToken) => {
+    try {
+
+      const { data } = await axios.post(`${backendUrl}/api/students/google-login`, { token: googleToken });
+      
+      if (data.success && data.token) {
+        
+        localStorage.setItem("studentToken", data.token);
+        
+        setStudent(data.student);
+        
+   
+        await fetchStudentProfile(data.token);
+        fetchUserEnrolledCourses(); 
+        
+        return { success: true };
+      }
+      
+      return { success: false, message: data.message };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || "Google Login failed" 
+      };
+    }
+  };
 
 const getToken = async () => {
  
@@ -250,7 +276,7 @@ const loginEducator = async (email, password) => {
 
   const value = {
     loginAdmin,
-    student, setStudent,
+    student, setStudent, googleLoginStudent,
     loginStudent,registerStudent, updateProfile, logoutStudent,
     loginEducator,
     allCourses, fetchAllCourses,

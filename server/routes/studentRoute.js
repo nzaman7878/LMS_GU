@@ -16,7 +16,7 @@ import {
   submitInterviewAttempt,
   getMyInterviewAttempts,
   getLectureDoubts, askDoubt, replyToDoubt,
-  deleteStudentDoubt, editStudentDoubt, deleteStudentReply, editStudentReply
+  deleteStudentDoubt, editStudentDoubt, deleteStudentReply, editStudentReply ,googleLogin
 
 } from "../controllers/studentController.js";
 import { askChatbot } from "../controllers/chatController.js";
@@ -27,7 +27,7 @@ const studentRouter = express.Router();
 
 studentRouter.post("/register", registerStudent);
 studentRouter.post("/login", loginStudent);
-
+studentRouter.post("/google-login", googleLogin);
 studentRouter.get("/profile", authStudent, getStudentData);
 
 
@@ -64,5 +64,6 @@ studentRouter.put("/doubts/:doubtId", authStudent, editStudentDoubt);
 studentRouter.delete("/doubts/:doubtId/reply/:replyId", authStudent, deleteStudentReply);
 studentRouter.put("/doubts/:doubtId/reply/:replyId", authStudent, editStudentReply);
 studentRouter.post("/chatbot/ask", authStudent, askChatbot);
+
 
 export default studentRouter;

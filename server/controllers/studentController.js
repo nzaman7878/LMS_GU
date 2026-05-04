@@ -6,21 +6,22 @@ import jwt from "jsonwebtoken";
 import { CourseProgress } from "../models/courseProgressModel.js";
 import Coupon from "../models/couponModel.js";
 import courseModel from "../models/courseModel.js";
-
 import cloudinary from "../config/cloudinary.js";
-
 import { Purchase } from "../models/purchaseModel.js";
 import InterviewQuestion from "../models/InterviewQuestion.js";
 import InterviewAttempt from "../models/InterviewAttempt.js";
 import Doubt from "../models/Doubt.js";
 
+import { OAuth2Client } from "google-auth-library";
 
-//  Register Student
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+
 const registerStudent = async (req, res) => {
   try {
     const { name, email, password, image } = req.body;
 
-   
     const existingStudent = await studentModel.findOne({ email });
     if (existingStudent) {
       return res.status(400).json({
@@ -31,7 +32,6 @@ const registerStudent = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-   
     const student = await studentModel.create({
       name,
       email,
@@ -39,7 +39,7 @@ const registerStudent = async (req, res) => {
       image,
     });
 
-    //  Generate token
+   
     const token = jwt.sign(
       { id: student._id },
       process.env.JWT_SECRET,
@@ -65,7 +65,7 @@ const registerStudent = async (req, res) => {
 };
 
 
-//  Login Student
+// Login Student
 const loginStudent = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -110,6 +110,71 @@ const loginStudent = async (req, res) => {
   }
 };
 
+
+const googleLogin = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ success: false, message: "Google token is required" });
+    }
+
+   
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    
+
+    const { email, name, picture } = ticket.getPayload();
+
+   
+    let student = await studentModel.findOne({ email });
+
+    
+    if (!student) {
+     
+      const randomPassword = Math.random().toString(36).slice(-10) + "A1!";
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+      const newStudent = new studentModel({
+        name: name,
+        email: email,
+        password: hashedPassword,
+        image: picture 
+      });
+      
+      student = await newStudent.save();
+    }
+
+    
+    const jwtToken = jwt.sign(
+      { id: student._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Google Login successful",
+      token: jwtToken,
+      student: {
+        id: student._id,
+        name: student.name,
+        email: student.email,
+        image: student.image
+      },
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Google authentication failed: " + error.message,
+    });
+  }
+};
+
+
 // Update Student Profile
 const updateStudentProfile = async (req, res) => {
   try {
@@ -127,21 +192,12 @@ const updateStudentProfile = async (req, res) => {
     const updateData = {};
 
     if (name && name !== "undefined") updateData.name = name;
-
     if (gender && gender !== "undefined") updateData.gender = gender;
-
     if (mobile && mobile !== "undefined") updateData.mobile = mobile;
+    if (university && university !== "undefined") updateData.university = university;
+    if (education && education !== "undefined") updateData.education = education;
+    if (address && address !== "undefined") updateData.address = address;
 
-    if (university && university !== "undefined")
-      updateData.university = university;
-
-    if (education && education !== "undefined")
-      updateData.education = education;
-
-    if (address && address !== "undefined")
-      updateData.address = address;
-
-   
     if (req.file) {
       const result = await cloudinary.uploader.upload(req.file.path);
       updateData.image = result.secure_url;
@@ -165,6 +221,7 @@ const updateStudentProfile = async (req, res) => {
     });
   }
 };
+
 // Get Student Data
 const getStudentData = async (req, res) => {
   try {
@@ -225,9 +282,7 @@ const studentEnrolledCourses = async (req, res) => {
 const purchaseCourse = async (req, res) => {
   try {
     const { courseId } = req.body;
-
     const origin = process.env.CLIENT_URL;
-
     const studentId = req.auth.userId;
 
     const studentData = await studentModel.findById(studentId);
@@ -251,7 +306,6 @@ const purchaseCourse = async (req, res) => {
       });
     }
 
-   
     const amount =
       courseData.coursePrice -
       (courseData.discount * courseData.coursePrice) / 100;
@@ -262,9 +316,6 @@ const purchaseCourse = async (req, res) => {
       amount,
     });
 
-   
-
-   
     const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
     const currency = process.env.CURRENCY.toLowerCase();
 
@@ -281,7 +332,6 @@ const purchaseCourse = async (req, res) => {
       },
     ];
 
-    
     const session = await stripeInstance.checkout.sessions.create({
       success_url: `${origin}/loading/my-enrollments`,
       cancel_url: `${origin}/`,
@@ -291,8 +341,6 @@ const purchaseCourse = async (req, res) => {
         purchaseId: newPurchase._id.toString(),
       },
     });
-
-   
 
     res.json({
       success: true,
@@ -394,7 +442,6 @@ const addUserRating = async (req, res) => {
       });
     }
 
-  
     const student = await studentModel.findById(userId);
 
     const isEnrolled = student?.enrolledCourses.some(
@@ -413,10 +460,8 @@ const addUserRating = async (req, res) => {
     );
 
     if (existingRatingIndex > -1) {
-     
       course.courseRatings[existingRatingIndex].rating = rating;
     } else {
-  
       course.courseRatings.push({ userId, rating });
     }
 
@@ -445,13 +490,11 @@ const enrollFreeCourse = async (req, res) => {
   try {
     const { courseId, couponCode } = req.body;
     
-    
     const studentId = req.auth?.id || req.auth?.userId || req.user?.id || req.studentId; 
 
     if (!studentId) {
        return res.json({ success: false, message: "Authentication failed. User ID not found." });
     }
-
 
     if (!courseId) throw new Error("Course ID is required");
 
@@ -474,7 +517,6 @@ const enrollFreeCourse = async (req, res) => {
       isFree = true;
     }
 
- 
     if (!isFree && couponCode) {
       const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
       
@@ -506,11 +548,9 @@ const enrollFreeCourse = async (req, res) => {
     course.enrolledStudents.push(student._id);
     await course.save();
 
- 
     student.enrolledCourses.push(course._id);
     await student.save();
 
-  
     await Purchase.create({
       courseId: course._id,
       userId: student._id,
@@ -561,7 +601,6 @@ const submitQuizScore = async (req, res) => {
       progressData.quizProgress[quizIndex].attempts += 1;
       progressData.quizProgress[quizIndex].bestScore = Math.max(progressData.quizProgress[quizIndex].bestScore, score);
       
-      
       progressData.quizProgress[quizIndex].userAnswers = userAnswers; 
     } else {
       progressData.quizProgress.push({
@@ -605,12 +644,10 @@ const getStudentInterviews = async (req, res) => {
 
 const submitInterviewAttempt = async (req, res) => {
   try {
- 
     const studentId = req.auth?.userId || req.auth?.id || req.body.studentId; 
     
     const { questionId, category, submittedAnswer } = req.body;
 
-   
     if (!studentId) {
       return res.status(401).json({ success: false, message: "Authentication failed. Student ID missing." });
     }
@@ -750,7 +787,6 @@ const deleteStudentReply = async (req, res) => {
     const { doubtId, replyId } = req.params;
     const studentId = req.auth?.userId || req.auth?.id || req.body.studentId;
 
-  
     const updatedDoubt = await Doubt.findOneAndUpdate(
       { _id: doubtId },
       { $pull: { replies: { _id: replyId, userId: studentId } } },
@@ -789,6 +825,7 @@ const editStudentReply = async (req, res) => {
 export {
   registerStudent,
   loginStudent,
+  googleLogin, 
   getStudentData,
   studentEnrolledCourses,
   purchaseCourse,

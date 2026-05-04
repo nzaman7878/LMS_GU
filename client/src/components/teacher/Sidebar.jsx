@@ -15,7 +15,11 @@ const Sidebar = () => {
   
     { name: 'Interview Mgmt.', path: '/educator/interviews', icon: assets.person_tick_icon } ,
     
-{ name: 'Course Q&A', path: '/educator/qna', icon: assets.person_tick_icon }
+{ name: 'Course Q&A', path: '/educator/qna', icon: assets.person_tick_icon },
+
+{ name: 'Assignments', path: '/educator/assignments', icon: assets.person_tick_icon },
+
+
   ];
 
 

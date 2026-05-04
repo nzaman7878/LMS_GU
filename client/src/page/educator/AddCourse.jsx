@@ -8,7 +8,7 @@ import QuizPopup from "../../components/teacher/QuizPopup";
 import { AppContext } from "../../context/AppContext";
 
 const AddCourse = () => {
-  const { backendUrl, isEducator } = useContext(AppContext);
+  const { backendUrl, isEducator, navigate } = useContext(AppContext);
   const quillRef = useRef(null);
   const editorRef = useRef(null);
 
@@ -35,26 +35,22 @@ const AddCourse = () => {
     isPreviewFree: false,
   });
 
-  // --- BULLETPROOF QUILL SETUP FOR REACT 18 ---
+  
   useEffect(() => {
-    if (quillRef.current) return; // Prevent double init
+    if (quillRef.current) return; 
 
     if (editorRef.current) {
-      // Clear React wrapper div
       editorRef.current.innerHTML = "";
 
-      // 1. Create a NEW inner div for Quill
       const editorDiv = document.createElement("div");
       editorRef.current.append(editorDiv);
 
-      // 2. Initialize Quill on the NEW element
       quillRef.current = new Quill(editorDiv, {
         theme: "snow",
         placeholder: "Write course description here...",
       });
     }
 
-    // Cleanup function for when component unmounts
     return () => {
       if (editorRef.current) {
         editorRef.current.innerHTML = ""; 
@@ -240,15 +236,9 @@ const AddCourse = () => {
           }
         }
 
-        setCourseTitle("");
-        setCoursePrice(0);
-        setDiscount(0);
-        setChapters([]);
-        setImage(null);
-        setCouponCode("");
-        setCouponDiscount(0);
-        setCouponExpiry("");
-        if (quillRef.current) quillRef.current.root.innerHTML = "";
+       
+        navigate(`/educator/edit-course/${newCourseId}`);
+
       } else {
         toast.error(data.message);
       }
@@ -431,13 +421,26 @@ const AddCourse = () => {
                           {lecture.resourceFile ? " • (Resource Attached)" : ""}
                         </span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteLecture(chapter.chapterId, i)}
-                        className="text-gray-400 hover:text-red-500"
-                      >
-                        ✕
-                      </button>
+                      
+                      
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => toast.info("Please publish the course first to add assignments.", { theme: "colored" })}
+                          className="text-[10px] font-semibold tracking-wide uppercase bg-gray-100 text-gray-500 px-2 py-1 rounded border border-gray-300 hover:bg-gray-200 transition cursor-help"
+                          title="Save course first"
+                        >
+                          + Assignment
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteLecture(chapter.chapterId, i)}
+                          className="text-gray-400 hover:text-red-500"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
                     </div>
                   ))}
 

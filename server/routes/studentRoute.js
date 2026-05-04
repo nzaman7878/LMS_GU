@@ -8,18 +8,21 @@ import {
   purchaseCourse,
   updateUserCourseProgress,
   getUserCourseProgress,
-  addUserRating ,
-  updateStudentProfile ,
+  addUserRating,
+  updateStudentProfile,
   enrollFreeCourse,
   submitQuizScore,
   getStudentInterviews,
   submitInterviewAttempt,
   getMyInterviewAttempts,
   getLectureDoubts, askDoubt, replyToDoubt,
-  deleteStudentDoubt, editStudentDoubt, deleteStudentReply, editStudentReply ,googleLogin
+  deleteStudentDoubt, editStudentDoubt, deleteStudentReply, editStudentReply, googleLogin,
+    getLectureAssignments, 
+  submitAssignment 
 
 } from "../controllers/studentController.js";
 import { askChatbot } from "../controllers/chatController.js";
+
 
 import authStudent from "../middleware/authStudent.js";
 
@@ -29,7 +32,6 @@ studentRouter.post("/register", registerStudent);
 studentRouter.post("/login", loginStudent);
 studentRouter.post("/google-login", googleLogin);
 studentRouter.get("/profile", authStudent, getStudentData);
-
 
 studentRouter.get(
   "/enrolled-courses",
@@ -50,12 +52,10 @@ studentRouter.put(
 studentRouter.post("/enroll-free", authStudent, enrollFreeCourse);
 studentRouter.post("/submit-quiz", authStudent, submitQuizScore);
 
-
 studentRouter.get("/interviews", authStudent, getStudentInterviews);
-
-
 studentRouter.post("/interviews/attempt", authStudent, submitInterviewAttempt);
 studentRouter.get("/interviews/my-attempts", authStudent, getMyInterviewAttempts);
+
 studentRouter.get("/doubts/:courseId/:lectureId", getLectureDoubts); 
 studentRouter.post("/doubts/ask", authStudent, askDoubt);
 studentRouter.post("/doubts/:doubtId/reply", replyToDoubt); 
@@ -63,7 +63,13 @@ studentRouter.delete("/doubts/:doubtId", authStudent, deleteStudentDoubt);
 studentRouter.put("/doubts/:doubtId", authStudent, editStudentDoubt);
 studentRouter.delete("/doubts/:doubtId/reply/:replyId", authStudent, deleteStudentReply);
 studentRouter.put("/doubts/:doubtId/reply/:replyId", authStudent, editStudentReply);
+
 studentRouter.post("/chatbot/ask", authStudent, askChatbot);
 
+
+studentRouter.get("/assignment/lecture/:lectureId", authStudent, getLectureAssignments);
+
+
+studentRouter.post("/assignment/submit", authStudent, upload.single('file'), submitAssignment);
 
 export default studentRouter;

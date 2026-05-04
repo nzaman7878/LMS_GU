@@ -7,6 +7,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import QuizPopup from "../../components/teacher/QuizPopup"; 
 import { AppContext } from "../../context/AppContext";
+import AddAssignment from "../../page/educator/AddAssignment"; 
 
 const EditCourse = () => {
   const { backendUrl, isEducator } = useContext(AppContext);
@@ -16,7 +17,6 @@ const EditCourse = () => {
   const adminToken = localStorage.getItem("adminToken");
   const isAdmin = !!adminToken;
   const hasAccess = isEducator || isAdmin;
-  // ---------------------------------
 
   const quillRef = useRef(null);
   const editorRef = useRef(null);
@@ -33,6 +33,9 @@ const EditCourse = () => {
   const [currentChapterId, setCurrentChapterId] = useState(null);
   const [showQuizPopup, setShowQuizPopup] = useState(false);
   const [courseDescription, setCourseDescription] = useState("");
+
+ 
+  const [assignmentModalLectureId, setAssignmentModalLectureId] = useState(null);
 
   const [lectureDetails, setLectureDetails] = useState({
     lectureTitle: "",
@@ -193,80 +196,90 @@ const EditCourse = () => {
     setShowQuizPopup(false);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const token = isAdmin ? adminToken : localStorage.getItem("educatorToken");
-      if (!token) return toast.error("Please login again.");
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const token = isAdmin ? adminToken : localStorage.getItem("educatorToken");
+    if (!token) return toast.error("Please login again.");
 
-      const formData = new FormData();
+    const formData = new FormData();
 
-      const courseData = {
-        courseTitle,
-        courseDescription: quillRef.current?.root?.innerHTML || "",
-        coursePrice: Number(coursePrice),
-        discount: Number(discount),
-        courseContent: chapters.map((chapter) => ({
-          ...chapter,
-          chapterContent: chapter.chapterContent.map((lecture) => {
-            const videoType = lecture.videoFile ? "upload" : (lecture.videoType || "youtube");
-            return {
-              ...lecture,
-              videoType,
-              youtubeUrl: videoType === "youtube" ? lecture.lectureUrl : (lecture.youtubeUrl || ""),
-              videoFileName: lecture.videoFile ? `video_${lecture.lectureId}` : lecture.videoFileName,
-              resources: lecture.resourceFile
-                ? [...(lecture.resources || []), { title: "Resource File", fileName: `resource_${lecture.lectureId}` }]
-                : lecture.resources || [],
-            };
-          }),
-        }))
-      };
+    // 1. Prepare Course Data Structure
+    const processedChapters = chapters.map((chapter) => ({
+      ...chapter,
+      chapterContent: chapter.chapterContent.map((lecture) => {
+        const isNewVideo = lecture.videoFile instanceof File;
+        const isNewResource = lecture.resourceFile instanceof File;
 
-      formData.append("courseData", JSON.stringify(courseData));
-      
-      if (image instanceof File) {
-        formData.append("thumbnail", image);
-      }
+        return {
+          ...lecture,
+          // If it's a new upload, we tell the backend which key to look for in files
+          videoType: isNewVideo ? "upload" : (lecture.videoType || "youtube"),
+          videoFileRef: isNewVideo ? `video_${lecture.lectureId}` : null,
+          resourceFileRef: isNewResource ? `resource_${lecture.lectureId}` : null,
+          
+          // Preserve existing resources if no new file is provided
+          resources: isNewResource 
+            ? [{ title: lecture.resourceFile.name, isNew: true }] // Backend will replace this
+            : lecture.resources || []
+        };
+      }),
+    }));
 
-      chapters.forEach((chapter) => {
-        chapter.chapterContent.forEach((lecture) => {
-          if (lecture.videoFile) {
-            formData.append(`video_${lecture.lectureId}`, lecture.videoFile);
-          }
-          if (lecture.resourceFile) {
-            formData.append(`resource_${lecture.lectureId}`, lecture.resourceFile);
-          }
-        });
-      });
+    const courseData = {
+      courseTitle,
+      courseDescription: quillRef.current?.root?.innerHTML || "",
+      coursePrice: Number(coursePrice),
+      discount: Number(discount),
+      courseContent: processedChapters
+    };
 
-      const loadingToast = toast.loading("Updating course details...");
-
-     
-      const updateUrl = isAdmin 
-        ? `${backendUrl}/api/admin/course/update/${courseId}` 
-        : `${backendUrl}/api/course/update/${courseId}`;
-
-      const { data } = await axios.put(updateUrl, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      toast.dismiss(loadingToast);
-
-      if (data.success) {
-        toast.success("Course updated successfully!");
-        navigate(isAdmin ? "/admin/manage-courses" : "/educator/my-courses"); 
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error) {
-      toast.dismiss();
-      console.error("Update error:", error);
-      toast.error(error.response?.data?.message || error.message);
+    // Append the JSON string
+    formData.append("courseData", JSON.stringify(courseData));
+    
+    // 2. Append Thumbnail if updated
+    if (image instanceof File) {
+      formData.append("thumbnail", image);
     }
-  };
+
+    // 3. Append physical files with unique keys
+    chapters.forEach((chapter) => {
+      chapter.chapterContent.forEach((lecture) => {
+        if (lecture.videoFile instanceof File) {
+          formData.append(`video_${lecture.lectureId}`, lecture.videoFile);
+        }
+        if (lecture.resourceFile instanceof File) {
+          formData.append(`resource_${lecture.lectureId}`, lecture.resourceFile);
+        }
+      });
+    });
+
+    const loadingToast = toast.loading("Updating course details...");
+    const updateUrl = isAdmin 
+      ? `${backendUrl}/api/admin/course/update/${courseId}` 
+      : `${backendUrl}/api/course/update/${courseId}`;
+
+    const { data } = await axios.put(updateUrl, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    toast.dismiss(loadingToast);
+
+    if (data.success) {
+      toast.success("Course updated successfully!");
+      navigate(isAdmin ? "/admin/manage-courses" : "/educator/my-courses"); 
+    } else {
+      toast.error(data.message);
+    }
+  } catch (error) {
+    toast.dismiss();
+    console.error("Update error:", error);
+    toast.error(error.response?.data?.message || "Failed to update course");
+  }
+};
 
   if (!hasAccess) {
     return <div className="flex items-center justify-center h-screen w-full text-gray-500">Permission denied.</div>;
@@ -397,16 +410,30 @@ const EditCourse = () => {
                           {lecture.videoFile || lecture.videoType === 'upload' ? " • (Uploaded Video)" : " • (YouTube Video)"}
                         </span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteLecture(chapter.chapterId, i)}
-                        className="text-gray-400 hover:text-red-500"
-                      >
-                        ✕
-                      </button>
+                      
+                      
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setAssignmentModalLectureId(lecture.lectureId)}
+                          className="text-[10px] font-semibold tracking-wide uppercase bg-indigo-50 text-indigo-600 px-2 py-1 rounded border border-indigo-200 hover:bg-indigo-600 hover:text-white transition"
+                        >
+                          + Assignment
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteLecture(chapter.chapterId, i)}
+                          className="text-gray-400 hover:text-red-500 font-bold"
+                          title="Delete Lecture"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
                     </div>
                   ))}
 
+               
                   {(chapter.quizzes || []).map((quiz, i) => (
                     <div key={quiz.quizId} className="flex justify-between items-center bg-purple-50 p-3 rounded border border-purple-200">
                       <div className="flex flex-col">
@@ -468,7 +495,7 @@ const EditCourse = () => {
         </button>
       </form>
 
-      {/* MODALS */}
+     
       {showQuizPopup && (
         <QuizPopup
           setShowQuizPopup={setShowQuizPopup}
@@ -477,9 +504,21 @@ const EditCourse = () => {
         />
       )}
 
+     
+      <AddAssignment
+        courseId={courseId}
+        lectureId={assignmentModalLectureId}
+        isOpen={!!assignmentModalLectureId} 
+        onClose={() => setAssignmentModalLectureId(null)}
+        onSuccess={() => {
+          setAssignmentModalLectureId(null);
+        }}
+      />
+
       {showPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+           
             <h2 className="text-xl font-bold mb-4 text-gray-800">Add Lecture Details</h2>
             <div className="space-y-4">
               <div>

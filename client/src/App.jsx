@@ -24,6 +24,7 @@ import InterviewManagement from "./page/educator/InterviewManagement";
 import AddInterviewQuestion from "./page/educator/AddInterviewQuestion";
 import InterviewSubmissions from "./page/educator/InterviewSubmissions";
 import EducatorDoubts from "./page/educator/EducatorDoubts";
+import EducatorAssignments from './page/educator/EducatorAssignments';
 
 import AdminLogin from "./page/admin/AdminLogin";
 import Admin from "./page/admin/Admin";
@@ -95,6 +96,7 @@ function App() {
             <Route path="add-interview" element={<AddInterviewQuestion />} />
             <Route path="interview-submissions" element={<InterviewSubmissions />} />
             <Route path="qna" element={<EducatorDoubts />} />
+            <Route path="assignments" element={<EducatorAssignments />} />
           </Route>
 
           <Route path="/admin-login" element={<AdminLogin />} />

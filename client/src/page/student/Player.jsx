@@ -11,6 +11,8 @@ import { assets } from "../../assets/assets";
 import TakeQuiz from "../../components/students/TakeQuiz";
 import DoubtSection from "../../components/students/DoubtSection";
 
+import AssignmentSection from "./AssignmentSection"; 
+
 const Player = () => {
   const {
     enrolledCourses,
@@ -27,6 +29,9 @@ const Player = () => {
   const [playerData, setPlayerData] = useState(null);
   const [progressData, setProgressData] = useState(null);
   const [initialRating, setInitialRating] = useState(0);
+  
+
+  const [activeTab, setActiveTab] = useState("doubts"); 
 
   const getCourseData = () => {
     enrolledCourses.forEach((course) => {
@@ -215,18 +220,21 @@ const Player = () => {
                                 Watch
                               </button>
 
-                              {lecture.resources?.length > 0 &&
-                                lecture.resources.map((res, idx) => (
-                                  <a
-                                    key={idx}
-                                    href={res.fileUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-green-600 font-bold hover:underline"
-                                  >
-                                    {res.title}
-                                  </a>
-                                ))}
+   {lecture.resources?.length > 0 &&
+  lecture.resources.map((res, idx) => (
+    <a
+      key={idx}
+      // Ensure the URL is absolute
+      href={res.fileUrl ? (res.fileUrl.startsWith('http') ? res.fileUrl : `https://${res.fileUrl}`) : '#'} 
+      // The 'download' attribute suggests a filename to the browser
+      download={res.title || "Resource_File"}
+      target="_blank"
+      rel="noreferrer"
+      className="text-green-600 font-bold hover:underline"
+    >
+      {res.title || "Resource File"} (Click to Download)
+    </a>
+))}
                             </div>
                           </div>
                         </li>
@@ -297,7 +305,6 @@ const Player = () => {
         </div>
 
         <div className="h-fit">
-         
           <div className="md:sticky md:top-10">
             {playerData ? (
               <div className="bg-white rounded shadow-lg p-2">
@@ -367,16 +374,43 @@ const Player = () => {
               </div>
             )}
 
-            
+            {/* ✅ NEW: The Tabbed Section for Doubts & Assignments */}
             {playerData && playerData.contentType === "video" && (
-              <DoubtSection courseId={courseId} lectureId={playerData.lectureId} />
+              <div className="mt-6 border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                
+                {/* 🔵 TAB BUTTONS */}
+                <div className="flex border-b bg-gray-50">
+                  <button 
+                    onClick={() => setActiveTab('doubts')} 
+                    className={`flex-1 py-3 font-semibold text-sm transition-all ${activeTab === 'doubts' ? 'text-blue-600 border-b-2 border-blue-600 bg-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    Doubts & Q&A
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('assignments')} 
+                    className={`flex-1 py-3 font-semibold text-sm transition-all ${activeTab === 'assignments' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    Assignments
+                  </button>
+                </div>
+                
+                {/* 🔵 TAB CONTENT */}
+                <div className="p-4 md:p-6 bg-gray-50/30">
+                  {activeTab === 'doubts' ? (
+                    <DoubtSection courseId={courseId} lectureId={playerData.lectureId} />
+                  ) : (
+                    <AssignmentSection lectureId={playerData.lectureId} />
+                  )}
+                </div>
+
+              </div>
             )}
             
           </div>
         </div>
       </div>
 
-      <Footer />
+     
     </>
   );
 };

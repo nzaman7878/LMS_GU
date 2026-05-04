@@ -11,6 +11,8 @@ import { Purchase } from "../models/purchaseModel.js";
 import InterviewQuestion from "../models/InterviewQuestion.js";
 import InterviewAttempt from "../models/InterviewAttempt.js";
 import Doubt from "../models/Doubt.js";
+import Assignment from "../models/Assignment.js";
+import AssignmentSubmission from "../models/AssignmentSubmission.js";
 
 import { OAuth2Client } from "google-auth-library";
 
@@ -222,7 +224,7 @@ const updateStudentProfile = async (req, res) => {
   }
 };
 
-// Get Student Data
+
 const getStudentData = async (req, res) => {
   try {
     const studentId = req.auth.userId;
@@ -822,6 +824,67 @@ const editStudentReply = async (req, res) => {
   }
 };
 
+const getLectureAssignments = async (req, res) => {
+  try {
+    const { lectureId } = req.params;
+    
+   
+    const studentId = req.auth?.id || req.auth?.userId;
+
+    if (!studentId) {
+       return res.status(401).json({ success: false, message: "Authentication failed. Student ID missing." });
+    }
+
+  
+    const assignments = await Assignment.find({ lectureId });
+
+   
+    const submissions = await AssignmentSubmission.find({ 
+      studentId, 
+      assignmentId: { $in: assignments.map(a => a._id) } 
+    });
+
+    res.status(200).json({ success: true, assignments, submissions });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const submitAssignment = async (req, res) => {
+  try {
+    
+    const studentId = req.auth?.id || req.auth?.userId;
+    
+    const { assignmentId, answerText } = req.body;
+    let fileUrl = "";
+
+    if (!studentId) {
+       return res.status(401).json({ success: false, message: "Authentication failed. Student ID missing." });
+    }
+
+    
+    if (req.file) {
+        const result = await cloudinary.uploader.upload(req.file.path);
+        fileUrl = result.secure_url;
+    }
+
+    const newSubmission = new AssignmentSubmission({
+      assignmentId,
+      studentId,
+      answerText,
+      fileUrl
+    });
+
+    await newSubmission.save();
+    res.status(201).json({ success: true, message: "Assignment submitted successfully!" });
+  } catch (error) {
+    if (error.code === 11000) {
+        return res.status(400).json({ success: false, message: "You have already submitted this assignment." });
+    }
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export {
   registerStudent,
   loginStudent,
@@ -839,5 +902,7 @@ export {
   submitInterviewAttempt,
   getMyInterviewAttempts,
   getLectureDoubts, askDoubt, replyToDoubt,
-  deleteStudentDoubt, editStudentDoubt, deleteStudentReply, editStudentReply
+  deleteStudentDoubt, editStudentDoubt, deleteStudentReply, editStudentReply,
+  getLectureAssignments,
+  submitAssignment
 };

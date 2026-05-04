@@ -1,12 +1,15 @@
 import educatorModel from "../models/educatorModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { v2 as cloudinary } from 'cloudinary';
 import Course from "../models/courseModel.js";
 import { Purchase } from "../models/purchaseModel.js";
 import studentModel from "../models/studentModel.js";
 import InterviewQuestion from "../models/InterviewQuestion.js";
 import InterviewAttempt from "../models/InterviewAttempt.js";
 import Doubt from "../models/Doubt.js";
+import Assignment from "../models/Assignment.js";
+import AssignmentSubmission from "../models/AssignmentSubmission.js";
 
 
 // LOGIN
@@ -81,7 +84,6 @@ const getEducatorProfile = async (req, res) => {
 };
 
 
-import { v2 as cloudinary } from 'cloudinary';
 
 const updateEducatorProfile = async (req, res) => {
   try {
@@ -468,7 +470,79 @@ const deleteDoubtReply = async (req, res) => {
   }
 };
 
+const createAssignment = async (req, res) => {
+  try {
+    
+    const educatorId = req.educatorId; 
+    
+    const { courseId, lectureId, title, description, totalMarks, dueDate } = req.body;
 
+    const newAssignment = new Assignment({
+      courseId, lectureId, educatorId, title, description, totalMarks, dueDate
+    });
+
+    await newAssignment.save();
+    res.status(201).json({ success: true, message: "Assignment created!", assignment: newAssignment });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+const getSubmissionsForAssignment = async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+    
+   
+    const submissions = await AssignmentSubmission.find({ assignmentId })
+      .populate("studentId", "name email image")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, submissions });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const gradeSubmission = async (req, res) => {
+  try {
+    const { submissionId, marksAwarded, educatorFeedback } = req.body;
+
+    const updatedSubmission = await AssignmentSubmission.findByIdAndUpdate(
+      submissionId,
+      { status: "Graded", marksAwarded, educatorFeedback },
+      { new: true }
+    );
+
+    res.status(200).json({ success: true, message: "Assignment graded!", submission: updatedSubmission });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const getEducatorAssignments = async (req, res) => {
+  try {
+    const educatorId = req.educatorId;
+    
+    // Fetch all assignments created by this educator
+    const assignments = await Assignment.find({ educatorId })
+      .populate("courseId", "courseTitle")
+      .sort({ createdAt: -1 });
+
+    // Count how many submissions are pending grading
+    const assignmentsWithCounts = await Promise.all(assignments.map(async (assignment) => {
+        const submissions = await AssignmentSubmission.find({ assignmentId: assignment._id });
+        const pending = submissions.filter(s => s.status === 'Pending').length;
+        return { 
+            ...assignment._doc, 
+            totalSubmissions: submissions.length, 
+            pendingGrading: pending 
+        };
+    }));
+
+    res.status(200).json({ success: true, assignments: assignmentsWithCounts });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 export {
   educatorLogin,
   getEducatorProfile,   
@@ -486,5 +560,9 @@ export {
   replyToStudentDoubt,
   deleteDoubt,
   editDoubtReply,
-  deleteDoubtReply
+  deleteDoubtReply,
+  createAssignment,
+  getSubmissionsForAssignment,
+  gradeSubmission,
+  getEducatorAssignments
 };

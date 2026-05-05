@@ -220,21 +220,40 @@ const Player = () => {
                                 Watch
                               </button>
 
-   {lecture.resources?.length > 0 &&
-  lecture.resources.map((res, idx) => (
-    <a
-      key={idx}
-      // Ensure the URL is absolute
-      href={res.fileUrl ? (res.fileUrl.startsWith('http') ? res.fileUrl : `https://${res.fileUrl}`) : '#'} 
-      // The 'download' attribute suggests a filename to the browser
-      download={res.title || "Resource_File"}
-      target="_blank"
-      rel="noreferrer"
-      className="text-green-600 font-bold hover:underline"
-    >
-      {res.title || "Resource File"} (Click to Download)
-    </a>
-))}
+{lecture.resources?.length > 0 &&
+  lecture.resources.map((res, idx) => {
+    const cleanUrl = res.fileUrl?.replace('/fl_attachment', '') || '#';
+
+    const handleDownload = async () => {
+      try {
+        const response = await fetch(cleanUrl);
+        if (!response.ok) throw new Error("Fetch failed");
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = res.title || 'Resource_File';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      } catch (err) {
+        console.error('Download failed, opening in new tab:', err);
+        window.open(cleanUrl, '_blank');
+      }
+    };
+
+    return (
+      <button
+        key={idx}
+        onClick={handleDownload}
+        className="text-green-600 font-bold hover:underline cursor-pointer"
+      >
+        📄 {res.title || "Resource File"} (Download)
+      </button>
+    );
+  })
+}
                             </div>
                           </div>
                         </li>
@@ -374,7 +393,7 @@ const Player = () => {
               </div>
             )}
 
-            {/* ✅ NEW: The Tabbed Section for Doubts & Assignments */}
+           
             {playerData && playerData.contentType === "video" && (
               <div className="mt-6 border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
                 
@@ -394,7 +413,7 @@ const Player = () => {
                   </button>
                 </div>
                 
-                {/* 🔵 TAB CONTENT */}
+              
                 <div className="p-4 md:p-6 bg-gray-50/30">
                   {activeTab === 'doubts' ? (
                     <DoubtSection courseId={courseId} lectureId={playerData.lectureId} />

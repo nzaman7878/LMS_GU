@@ -10,7 +10,6 @@ const EducatorAssignments = () => {
   const [submissions, setSubmissions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  
   const [gradingSubmissionId, setGradingSubmissionId] = useState(null);
   const [marks, setMarks] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -18,6 +17,8 @@ const EducatorAssignments = () => {
   const fetchAssignments = async () => {
     try {
       const token = localStorage.getItem("educatorToken");
+      if (!token) return;
+
       const { data } = await axios.get(`${backendUrl}/api/educator/assignments`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -70,17 +71,17 @@ const EducatorAssignments = () => {
         setFeedback("");
         fetchSubmissions(selectedAssignment._id); 
         fetchAssignments(); 
+      }
     } catch (error) {
-      toast.error("Failed to submit grade");
+      toast.error(error.response?.data?.message || "Failed to submit grade");
     }
   };
 
-  if (isLoading) return <div className="p-8">Loading assignments...</div>;
+  if (isLoading) return <div className="p-8 flex justify-center items-center h-screen text-gray-500">Loading assignments...</div>;
 
   return (
     <div className="h-screen overflow-hidden flex flex-col md:flex-row bg-gray-50 w-full">
-      
-     
+    
       <div className="w-full md:w-1/3 border-r bg-white flex flex-col h-full overflow-y-auto">
         <div className="p-6 border-b bg-white sticky top-0 z-10">
           <h2 className="text-xl font-bold text-gray-800">My Assignments</h2>
@@ -106,27 +107,31 @@ const EducatorAssignments = () => {
                   )}
                 </div>
                 <p className="text-xs text-gray-500 mt-1 truncate">{assignment.courseId?.courseTitle}</p>
-                <p className="text-xs font-medium text-gray-400 mt-2">{assignment.totalSubmissions} Total Submissions</p>
+                <div className="flex justify-between items-center mt-3">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">{assignment.totalSubmissions} Submissions</p>
+                    <p className="text-[10px] text-gray-400 font-medium">Max Marks: {assignment.totalMarks}</p>
+                </div>
               </div>
             ))
           )}
         </div>
       </div>
 
-    
+      {/* RIGHT CONTENT: Submissions */}
       <div className="w-full md:w-2/3 h-full overflow-y-auto bg-gray-50 p-6 md:p-8">
         {!selectedAssignment ? (
-          <div className="h-full flex items-center justify-center text-gray-400">
-            Select an assignment from the left to view submissions.
+          <div className="h-full flex flex-col items-center justify-center text-gray-400">
+            <div className="text-4xl mb-2">📝</div>
+            <p>Select an assignment from the left to view student work.</p>
           </div>
         ) : (
           <div className="max-w-4xl mx-auto space-y-6">
             
-         
+            {/* Assignment Header */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
               <h2 className="text-2xl font-bold text-gray-800">{selectedAssignment.title}</h2>
               <p className="text-sm text-gray-500 mt-1">Course: {selectedAssignment.courseId?.courseTitle} | Total Marks: {selectedAssignment.totalMarks}</p>
-              <div className="mt-4 p-4 bg-gray-50 rounded text-sm text-gray-700 whitespace-pre-wrap">
+              <div className="mt-4 p-4 bg-gray-50 rounded text-sm text-gray-700 whitespace-pre-wrap border">
                 {selectedAssignment.description}
               </div>
             </div>
@@ -141,15 +146,18 @@ const EducatorAssignments = () => {
                   <div key={sub._id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center gap-3">
-                        <img src={sub.studentId?.image || "https://via.placeholder.com/40"} alt="" className="w-10 h-10 rounded-full object-cover" />
+                        <img src={sub.studentId?.image || "https://via.placeholder.com/40"} alt="" className="w-10 h-10 rounded-full object-cover border" />
                         <div>
                           <p className="font-semibold text-gray-800">{sub.studentId?.name}</p>
                           <p className="text-xs text-gray-500">{sub.studentId?.email}</p>
                         </div>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${sub.status === "Graded" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
-                        {sub.status === "Graded" ? `Graded: ${sub.marksAwarded}/${selectedAssignment.totalMarks}` : "Needs Grading"}
-                      </span>
+                      <div className="text-right">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${sub.status === "Graded" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                          {sub.status === "Graded" ? `Graded: ${sub.marksAwarded}/${selectedAssignment.totalMarks}` : "Needs Grading"}
+                        </span>
+                        <p className="text-[10px] text-gray-400 mt-1">{new Date(sub.createdAt).toLocaleDateString()} {new Date(sub.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                      </div>
                     </div>
 
                     <div className="bg-gray-50 p-4 rounded border border-gray-100 mb-4 text-sm text-gray-700 whitespace-pre-wrap">
@@ -157,12 +165,13 @@ const EducatorAssignments = () => {
                     </div>
 
                     {sub.fileUrl && (
-                      <a href={sub.fileUrl} target="_blank" rel="noreferrer" className="inline-block mb-4 text-sm font-semibold text-blue-600 hover:underline">
-                        📎 View Attached File
+                      <a href={sub.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 mb-4 text-sm font-semibold text-blue-600 hover:text-blue-800 transition">
+                        <span>📎 View Attached File</span>
+                        <span className="text-xs font-normal text-gray-400">(Opens in new tab)</span>
                       </a>
                     )}
 
-                   
+                    {/* Grading Form */}
                     {gradingSubmissionId === sub._id ? (
                       <form onSubmit={handleGradeSubmit} className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 mt-2">
                         <h4 className="font-bold text-sm text-blue-900 mb-3">Grade this submission</h4>
@@ -182,10 +191,14 @@ const EducatorAssignments = () => {
                         </div>
                       </form>
                     ) : (
-                      sub.status === "Pending" && (
+                      sub.status === "Pending" ? (
                         <button onClick={() => { setGradingSubmissionId(sub._id); setMarks(""); setFeedback(""); }} className="bg-indigo-50 text-indigo-600 border border-indigo-200 px-4 py-2 rounded text-sm font-bold hover:bg-indigo-600 hover:text-white transition">
                           Grade Student
                         </button>
+                      ) : (
+                        <div className="mt-2 text-sm italic text-gray-500">
+                           <span className="font-bold not-italic text-gray-700">Educator Feedback:</span> {sub.educatorFeedback || "No feedback provided."}
+                        </div>
                       )
                     )}
                   </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom'; // Import this
+import { useParams } from 'react-router-dom'; 
 import { useAppContext } from '../../context/AppContext';
 import { toast } from 'react-toastify';
 import axios from 'axios';
@@ -7,7 +7,7 @@ import { assets } from '../../assets/assets';
 
 const AddEducators = () => {
   const { backendUrl, navigate } = useAppContext();
-  const { id } = useParams(); // Get ID from URL
+  const { id } = useParams(); 
   const isEditMode = !!id;
 
   const [image, setImage] = useState(false);
@@ -59,7 +59,7 @@ const AddEducators = () => {
       if (image) formData.append('image', image);
       formData.append('name', name);
       formData.append('email', email);
-      formData.append('password', password); // Optional in edit mode
+      formData.append('password', password); 
       formData.append('subject', subject);
       formData.append('qualification', qualification);
       formData.append('experience', experience);
@@ -69,7 +69,7 @@ const AddEducators = () => {
 
       const token = localStorage.getItem('adminToken');
       
-      // Determine if we call Add or Update API
+    
       const endpoint = isEditMode ? '/api/admin/update-educator' : '/api/admin/add-educator';
       
       const { data } = await axios.post(`${backendUrl}${endpoint}`, formData, {
@@ -78,7 +78,7 @@ const AddEducators = () => {
 
       if (data.success) {
         toast.success(data.message);
-        navigate('/admin/manage-educators'); // Go back to list
+        navigate('/admin/manage-educators'); 
       } else {
         toast.error(data.message);
       }

@@ -4,7 +4,7 @@ import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import axios from "axios";
 import { toast } from "react-toastify";
-import QuizPopup from "../../components/teacher/QuizPopup"; 
+import QuizPopup from "../../components/educator/QuizPopup"; 
 import { AppContext } from "../../context/AppContext";
 
 const AddCourse = () => {

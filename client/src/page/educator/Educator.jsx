@@ -1,8 +1,8 @@
 import React from 'react';
-import Navbar from '../../components/teacher/Navbar';
+import Navbar from '../../components/educator/Navbar';
 import { Outlet } from 'react-router-dom';
-import Sidebar from '../../components/teacher/Sidebar';
-import Footer from '../../components/teacher/Footer';
+import Sidebar from '../../components/educator/Sidebar';
+import Footer from '../../components/educator/Footer';
 
 const Educator = () => {
   return (

@@ -19,7 +19,8 @@ import EducatorMyProfile from "./page/educator/MyProfile";
 import AddCourse from "./page/educator/AddCourse";
 import MyCourses from "./page/educator/MyCourses";
 import StudentsEnrolled from "./page/educator/StudentsEnrolled";
-import EditCourse from "./components/teacher/EditCourse";
+import EnrollmentLoading from "./components/students/EnrollmentLoading";
+import EditCourse from "./components/educator/EditCourse";
 import InterviewManagement from "./page/educator/InterviewManagement";
 import AddInterviewQuestion from "./page/educator/AddInterviewQuestion";
 import InterviewSubmissions from "./page/educator/InterviewSubmissions";
@@ -79,6 +80,8 @@ function App() {
           <Route path="/my-enrollments" element={<MyEnrollments />} />
           <Route path="/player/:courseId" element={<Player />} />
           <Route path="/loading" element={<Loading />} />
+          <Route path="/loading/:path" element={<Loading />} />
+<Route path="/enrollment-success" element={<EnrollmentLoading />} /> 
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
           <Route path="/interviews" element={<StudentInterviews />} />

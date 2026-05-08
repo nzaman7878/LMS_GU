@@ -23,8 +23,9 @@ app.use(cors({
     process.env.CLIENT_URL
   ],
   credentials: true,
+  
+  exposedHeaders: ["Content-Disposition"], 
 }));
-
 app.post(
   "/api/webhook/stripe",
   express.raw({ type: "application/json" }),

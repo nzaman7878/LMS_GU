@@ -18,7 +18,8 @@ import {
   getLectureDoubts, askDoubt, replyToDoubt,
   deleteStudentDoubt, editStudentDoubt, deleteStudentReply, editStudentReply, googleLogin,
     getLectureAssignments, 
-  submitAssignment 
+  submitAssignment ,
+  downloadCertificate
 
 } from "../controllers/studentController.js";
 import { askChatbot } from "../controllers/chatController.js";
@@ -33,6 +34,7 @@ studentRouter.post("/login", loginStudent);
 studentRouter.post("/google-login", googleLogin);
 studentRouter.get("/profile", authStudent, getStudentData);
 
+
 studentRouter.get(
   "/enrolled-courses",
   authStudent,
@@ -42,6 +44,7 @@ studentRouter.get(
 studentRouter.post("/purchase", authStudent, purchaseCourse);
 studentRouter.post("/update-course-progress", authStudent, updateUserCourseProgress);
 studentRouter.post("/get-course-progress", authStudent, getUserCourseProgress);
+studentRouter.get("/certificate/:courseId", authStudent, downloadCertificate);
 studentRouter.post("/add-rating", authStudent, addUserRating);
 studentRouter.put(
   "/update-profile", 

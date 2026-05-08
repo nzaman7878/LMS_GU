@@ -13,6 +13,7 @@ import InterviewAttempt from "../models/InterviewAttempt.js";
 import Doubt from "../models/Doubt.js";
 import Assignment from "../models/Assignment.js";
 import AssignmentSubmission from "../models/AssignmentSubmission.js";
+import PDFDocument from 'pdfkit';
 
 import { OAuth2Client } from "google-auth-library";
 
@@ -358,38 +359,55 @@ const purchaseCourse = async (req, res) => {
   }
 };
 
-// Update User Course Progress
- const updateUserCourseProgress = async (req, res) => {
+const updateUserCourseProgress = async (req, res) => {
   try {
-    const userId = req.auth.userId;
+    const userId = req.auth.userId; 
     const { courseId, lectureId } = req.body;
 
+   
     let progressData = await CourseProgress.findOne({
       userId,
       courseId,
     });
 
     if (progressData) {
+      
       if (progressData.lectureCompleted.includes(lectureId)) {
         return res.json({
           success: true,
           message: "Lecture Already Completed",
         });
       }
-
       progressData.lectureCompleted.push(lectureId);
-      await progressData.save();
     } else {
-      progressData = await CourseProgress.create({
+      
+      progressData = new CourseProgress({
         userId,
         courseId,
         lectureCompleted: [lectureId],
       });
     }
 
+    
+    const courseData = await courseModel.findById(courseId); 
+    if (courseData) {
+      let totalLectures = 0;
+      courseData.courseContent.forEach((chapter) => {
+        totalLectures += chapter.chapterContent.length;
+      });
+
+      
+      if (totalLectures > 0 && progressData.lectureCompleted.length === totalLectures) {
+        progressData.completed = true;
+      }
+    }
+   
+    await progressData.save();
+
     res.json({
       success: true,
       message: "Progress Updated",
+      isCompleted: progressData.completed, 
     });
   } catch (error) {
     res.json({
@@ -399,16 +417,35 @@ const purchaseCourse = async (req, res) => {
   }
 };
 
-// get User Course Progress
+
 const getUserCourseProgress = async (req, res) => {
   try {
     const userId = req.auth.userId;
     const { courseId } = req.body;
 
-    const progressData = await CourseProgress.findOne({
+    let progressData = await CourseProgress.findOne({
       userId,
       courseId,
     });
+
+    
+    if (progressData && progressData.completed === false) {
+      const courseData = await courseModel.findById(courseId);
+      
+      if (courseData) {
+        let totalLectures = 0;
+        courseData.courseContent.forEach((chapter) => {
+          totalLectures += chapter.chapterContent.length;
+        });
+
+        
+        if (totalLectures > 0 && progressData.lectureCompleted.length === totalLectures) {
+          progressData.completed = true;
+          await progressData.save(); // Save the fix to the database
+        }
+      }
+    }
+    // ---------------------------------------------------------
 
     res.json({
       success: true,
@@ -885,6 +922,117 @@ const submitAssignment = async (req, res) => {
   }
 };
 
+
+const downloadCertificate = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const userId = req.auth.userId; 
+    
+   
+    const certificateType = req.query.type || 'standard';
+
+    const progress = await CourseProgress.findOne({ userId, courseId });
+    
+    if (!progress || !progress.completed) {
+      return res.status(403).json({ success: false, message: "Course not completed yet." });
+    }
+
+    const student = await studentModel.findById(userId);
+    const course = await courseModel.findById(courseId).populate('educator');
+
+    const doc = new PDFDocument({ layout: 'landscape', size: 'A4' });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    
+    res.setHeader('Content-Disposition', `attachment; filename="${course.courseTitle}_${certificateType.toUpperCase()}_Certificate.pdf"`);
+    
+    doc.pipe(res);
+
+    const completionDate = new Date(progress.updatedAt).toLocaleDateString();
+    const instructorName = course.educator ? course.educator.name : "Platform Instructor";
+    const centerX = doc.page.width / 2;
+    const footerY = 480;
+
+   
+    if (certificateType === 'premium') {
+      
+      
+      doc.rect(0, 0, doc.page.width, doc.page.height).fill('#FDFBF7');
+      
+      
+      doc.rect(20, 20, doc.page.width - 40, doc.page.height - 40).lineWidth(4).stroke('#B45309');
+     
+      doc.rect(28, 28, doc.page.width - 56, doc.page.height - 56).lineWidth(1).stroke('#D97706');
+
+     
+      doc.fontSize(38).fillColor('#78350F')
+         .text('CERTIFICATE OF EXCELLENCE', 0, 110, { align: 'center', characterSpacing: 2 });
+      
+      doc.fontSize(14).fillColor('#92400E')
+         .text('This premium honor is proudly presented to', 0, 190, { align: 'center', oblique: true });
+      
+    
+      doc.fontSize(45).fillColor('#B45309')
+         .text(student.name.toUpperCase(), 0, 230, { align: 'center' });
+      
+      doc.moveTo(centerX - 250, 290).lineTo(centerX + 250, 290).lineWidth(1).stroke('#D97706');
+      
+      
+      doc.fontSize(14).fillColor('#92400E')
+         .text('for outstanding performance and successful completion of the masterclass', 0, 320, { align: 'center' });
+      
+      doc.fontSize(24).fillColor('#78350F')
+         .text(course.courseTitle, 100, 360, { align: 'center', width: doc.page.width - 200 });
+
+ 
+      doc.fontSize(12).fillColor('#78350F').text(`Awarded on: ${completionDate}`, 120, footerY);
+      doc.moveTo(100, footerY - 10).lineTo(280, footerY - 10).stroke('#D97706'); 
+      
+      doc.text(`Lead Instructor: ${instructorName}`, doc.page.width - 320, footerY, { align: 'right', width: 200 });
+      doc.moveTo(doc.page.width - 320, footerY - 10).lineTo(doc.page.width - 120, footerY - 10).stroke('#D97706');
+
+   
+    } else {
+      
+
+      doc.rect(0, 0, doc.page.width, doc.page.height).fill('#ffffff');
+      
+      
+      doc.rect(20, 20, doc.page.width - 40, doc.page.height - 40).lineWidth(1).stroke('#E5E7EB');
+      doc.rect(30, 30, doc.page.width - 60, doc.page.height - 60).lineWidth(2).stroke('#4F46E5');
+
+
+      doc.fontSize(36).fillColor('#111827')
+         .text('CERTIFICATE OF COMPLETION', 0, 120, { align: 'center' });
+      
+      doc.fontSize(14).fillColor('#6B7280')
+         .text('This is to certify that', 0, 200, { align: 'center' });
+      
+      doc.fontSize(40).fillColor('#4F46E5')
+         .text(student.name.toUpperCase(), 0, 240, { align: 'center' });
+      
+      doc.moveTo(centerX - 200, 300).lineTo(centerX + 200, 300).lineWidth(1).stroke('#E5E7EB');
+      
+      doc.fontSize(14).fillColor('#6B7280')
+         .text('has successfully completed the course', 0, 330, { align: 'center' });
+      
+      doc.fontSize(22).fillColor('#111827')
+         .text(course.courseTitle, 100, 360, { align: 'center', width: doc.page.width - 200 });
+
+  
+      doc.fontSize(12).fillColor('#4B5563').text(`Date: ${completionDate}`, 120, footerY);
+      doc.moveTo(100, footerY - 10).lineTo(250, footerY - 10).stroke('#D1D5DB'); 
+      
+      doc.text(`Instructor: ${instructorName}`, doc.page.width - 270, footerY, { align: 'right', width: 150 });
+      doc.moveTo(doc.page.width - 270, footerY - 10).lineTo(doc.page.width - 120, footerY - 10).stroke('#D1D5DB');
+    }
+
+    doc.end();
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export {
   registerStudent,
   loginStudent,
@@ -894,6 +1042,7 @@ export {
   purchaseCourse,
   updateUserCourseProgress,
   getUserCourseProgress,
+ 
   addUserRating,
   updateStudentProfile,
   enrollFreeCourse,
@@ -904,5 +1053,6 @@ export {
   getLectureDoubts, askDoubt, replyToDoubt,
   deleteStudentDoubt, editStudentDoubt, deleteStudentReply, editStudentReply,
   getLectureAssignments,
-  submitAssignment
+  submitAssignment,
+  downloadCertificate
 };

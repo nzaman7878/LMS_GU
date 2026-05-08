@@ -4,14 +4,16 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 
 const MyProfile = () => {
-  
-    const { backendUrl, isEducator, setEducatorData } = useContext(AppContext);
-    
+    const { backendUrl, setEducatorData } = useContext(AppContext);
     const eToken = localStorage.getItem('educatorToken');
 
     const [isEdit, setIsEdit] = useState(false);
     const [image, setImage] = useState(false);
     const [loading, setLoading] = useState(true);
+    
+ 
+    const fallbackImage = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
+
     const [profileData, setProfileData] = useState({
         name: '',
         subject: '',
@@ -57,16 +59,10 @@ const MyProfile = () => {
             
             if (data.success) {
                 toast.success(data.message);
-                
-            
-                localStorage.setItem("educatorData", JSON.stringify(data.educator)); 
-                
-         
                 setEducatorData(data.educator);
-
                 setIsEdit(false);
                 setImage(false);
-                getProfileData();
+                getProfileData(); 
             }
         } catch (error) {
             toast.error(error.response?.data?.message || error.message);
@@ -95,7 +91,8 @@ const MyProfile = () => {
                     <label htmlFor="image" className='cursor-pointer relative'>
                         <img 
                             className='w-24 h-24 rounded-lg bg-gray-100 object-cover border' 
-                            src={image ? URL.createObjectURL(image) : profileData.image} 
+                           
+                            src={image ? URL.createObjectURL(image) : (profileData.image || fallbackImage)} 
                             alt="Profile" 
                         />
                         {isEdit && (
@@ -103,11 +100,18 @@ const MyProfile = () => {
                                 <p className='text-white text-[10px]'>Change</p>
                             </div>
                         )}
-                        <input onChange={(e) => setImage(e.target.files[0])} type="file" id="image" hidden disabled={!isEdit} />
+                        <input 
+                            onChange={(e) => setImage(e.target.files[0])} 
+                            type="file" 
+                            id="image" 
+                            hidden 
+                            disabled={!isEdit} 
+                            accept="image/*"
+                        />
                     </label>
                     <div>
-                        <p className='text-2xl font-semibold text-gray-800'>{profileData.name}</p>
-                        <p className='text-indigo-600 font-medium'>{profileData.subject}</p>
+                        <p className='text-2xl font-semibold text-gray-800'>{profileData.name || "User"}</p>
+                        <p className='text-indigo-600 font-medium'>{profileData.subject || "No Subject set"}</p>
                     </div>
                 </div>
 
@@ -124,18 +128,6 @@ const MyProfile = () => {
                     {isEdit 
                         ? <input className='bg-gray-50 border rounded px-2 py-1 outline-indigo-500' type="text" value={profileData.subject} onChange={e => setProfileData(prev => ({ ...prev, subject: e.target.value }))} />
                         : <p>{profileData.subject}</p>
-                    }
-
-                    <p className='font-medium'>Qualification:</p>
-                    {isEdit 
-                        ? <input className='bg-gray-50 border rounded px-2 py-1 outline-indigo-500' type="text" value={profileData.qualification} onChange={e => setProfileData(prev => ({ ...prev, qualification: e.target.value }))} />
-                        : <p>{profileData.qualification}</p>
-                    }
-
-                    <p className='font-medium'>Experience:</p>
-                    {isEdit 
-                        ? <input className='bg-gray-50 border rounded px-2 py-1 outline-indigo-500' type="text" value={profileData.experience} onChange={e => setProfileData(prev => ({ ...prev, experience: e.target.value }))} />
-                        : <p>{profileData.experience}</p>
                     }
 
                     <p className='font-medium'>About Me:</p>

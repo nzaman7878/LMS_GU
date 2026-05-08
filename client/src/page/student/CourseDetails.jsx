@@ -4,7 +4,6 @@ import { AppContext } from "../../context/AppContext";
 import Loading from "../../components/students/Loading";
 import { assets } from "../../assets/assets.js";
 import humanizeDuration from "humanize-duration";
-import Footer from "../../components/students/Footer";
 import YouTube from "react-youtube";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -504,7 +503,7 @@ const CourseDetails = () => {
           </div>
         </div>
       </div>
-      <Footer />
+      
     </>
   );
 };

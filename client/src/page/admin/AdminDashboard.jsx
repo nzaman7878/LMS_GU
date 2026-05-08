@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AppContext } from '../../context/AppContext'; 
 import { useNavigate } from 'react-router-dom'; 
-import Navbar from '../../components/students/Navbar';
 
 const AdminDashboard = () => {
   const { backendUrl, currency } = useContext(AppContext);
@@ -13,9 +12,13 @@ const AdminDashboard = () => {
     totalStudents: 0,
     totalEducators: 0,
     totalRevenue: 0,
+    recentEnrollments: [], 
   });
   
   const [loading, setLoading] = useState(true);
+  
+
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -41,38 +44,38 @@ const AdminDashboard = () => {
   }, [backendUrl]);
 
   const formatNumber = (num) => {
-    return num.toLocaleString('en-IN'); 
+    return num ? num.toLocaleString('en-IN') : '0'; 
   };
-
 
   const stats = [
     { label: 'Total Courses', value: formatNumber(dashboardData.totalCourses), color: 'bg-blue-500', path: '/admin/manage-courses' },
     { label: 'Total Students', value: formatNumber(dashboardData.totalStudents), color: 'bg-green-500', path: '/admin/manage-students' },
     { label: 'Total Teachers', value: formatNumber(dashboardData.totalEducators), color: 'bg-purple-500', path: '/admin/manage-educators' },
-    { label: 'Total Revenue', value: `${currency}${formatNumber(dashboardData.totalRevenue)}`, color: 'bg-orange-500' }, // No path for revenue (unless you have a reports page)
+    { label: 'Total Revenue', value: `${currency}${formatNumber(dashboardData.totalRevenue)}`, color: 'bg-orange-500' }, 
   ];
 
   if (loading) {
     return <div className="p-8 text-center text-gray-500">Loading dashboard data...</div>;
   }
 
+
+  const displayedEnrollments = showAll 
+    ? dashboardData.recentEnrollments 
+    : dashboardData.recentEnrollments.slice(0, 5);
+
   return (
     <div>
-    
       <h2 className='text-2xl font-bold text-gray-700 mb-6'>Dashboard Overview</h2>
-      
-      
+     
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
         {stats.map((item, index) => (
           <div 
             key={index} 
-            
             onClick={() => {
                 if (item.path) {
                     navigate(item.path);
                 }
             }}
-           
             className={`bg-white p-6 rounded-xl shadow-sm border-l-4 border-indigo-500 transition-transform hover:-translate-y-1 ${item.path ? 'cursor-pointer hover:shadow-md' : ''}`}
           >
             <p className='text-sm text-gray-500 uppercase font-bold'>{item.label}</p>
@@ -81,12 +84,66 @@ const AdminDashboard = () => {
         ))}
       </div>
 
-      <div className='mt-10 bg-white p-6 rounded-xl shadow-sm'>
+      <div className='mt-10 bg-white p-6 rounded-xl shadow-sm overflow-hidden'>
         <h3 className='text-lg font-bold text-gray-700 mb-4'>Recent Enrollments</h3>
-        <div className='border-t border-gray-100 pt-4 text-gray-500 text-center italic'>
-          Database connection established. Real-time data will appear here.
+        
+        <div className='border-t border-gray-100 pt-4'>
+          {dashboardData.recentEnrollments && dashboardData.recentEnrollments.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left whitespace-nowrap">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-600 text-sm">
+                    <th className="py-3 px-4 font-semibold rounded-tl-md">Student Name</th>
+                    <th className="py-3 px-4 font-semibold">Course</th>
+                    <th className="py-3 px-4 font-semibold">Amount</th>
+                    <th className="py-3 px-4 font-semibold rounded-tr-md">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm text-gray-700">
+                
+                  {displayedEnrollments.map((enrollment, index) => (
+                    <tr key={index} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                      <td className="py-3 px-4">
+                        {enrollment.userId ? enrollment.userId.name : 'Unknown Student'}
+                      </td>
+                      <td className="py-3 px-4">
+  {enrollment.courseId ? enrollment.courseId.courseTitle : 'Deleted Course'}
+</td>
+                      <td className="py-3 px-4">
+                        {currency}{formatNumber(enrollment.amount)}
+                      </td>
+                      <td className="py-3 px-4 text-gray-500">
+                        {new Date(enrollment.createdAt).toLocaleDateString('en-IN', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* NEW: The Show More / Show Less Button */}
+              {dashboardData.recentEnrollments.length > 5 && (
+                <div className="mt-6 flex justify-center border-t border-gray-100 pt-4">
+                  <button 
+                    onClick={() => setShowAll(!showAll)}
+                    className="px-6 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-semibold rounded-lg transition-colors text-sm"
+                  >
+                    {showAll ? 'Show Less' : 'Show More Enrollments'}
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className='text-gray-500 text-center italic py-6'>
+              No recent enrollments found.
+            </div>
+          )}
         </div>
       </div>
+
     </div>
   );
 };

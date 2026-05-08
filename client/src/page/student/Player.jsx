@@ -4,7 +4,7 @@ import axios from "axios";
 import { AppContext } from "../../context/AppContext";
 import { toast } from "react-toastify";
 import Loading from "../../components/students/Loading";
-import Footer from "../../components/students/Footer";
+
 import YouTube from "react-youtube";
 import { assets } from "../../assets/assets";
 
@@ -397,7 +397,7 @@ const Player = () => {
             {playerData && playerData.contentType === "video" && (
               <div className="mt-6 border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
                 
-                {/* 🔵 TAB BUTTONS */}
+               
                 <div className="flex border-b bg-gray-50">
                   <button 
                     onClick={() => setActiveTab('doubts')} 

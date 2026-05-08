@@ -124,14 +124,15 @@ const ManageEducators = () => {
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-3">
                       <img
-                        src={`${backendUrl}/images/${item.image}`}
-                        
-                        alt={item.name}
-                        className="w-10 h-10 rounded-full object-cover bg-gray-100 border"
-                        onError={(e) => {
-                          e.target.src = "https://via.placeholder.com/40";
-                        }}
-                      />
+  
+  src={item.image} 
+  alt={item.name}
+  className="w-10 h-10 rounded-full object-cover bg-gray-100 border"
+  onError={(e) => {
+   
+    e.target.src = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
+  }}
+/>
                       <div>
                         <p className="font-bold text-gray-800">{item.name}</p>
                         <p className="text-xs text-gray-500">{item.email}</p>

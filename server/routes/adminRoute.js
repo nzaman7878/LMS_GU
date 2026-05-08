@@ -9,7 +9,7 @@ const adminRouter = express.Router()
 adminRouter.post("/register", registerAdmin);
 adminRouter.post("/login", loginAdmin);
 
-adminRouter.post("/addEducator",authAdmin, upload.single('image'), addEducator);
+adminRouter.post("/add-educator",authAdmin, upload.single('image'), addEducator);
 adminRouter.get('/all-educators', authAdmin, getAllEducators);
 adminRouter.post('/delete-educator', authAdmin, deleteEducator);
 adminRouter.post('/update-educator', authAdmin, upload.single('image'), updateEducator);

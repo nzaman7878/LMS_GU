@@ -3,7 +3,10 @@ import educatorModel from "../models/educatorModel.js";
 import bcrypt from "bcrypt";
 import Admin from "../models/adminModel.js";
 import studentModel from "../models/studentModel.js";
+import { Purchase } from '../models/purchaseModel.js';
 import Course from "../models/courseModel.js";
+import { v2 as cloudinary } from 'cloudinary';
+import fs from 'fs';
 
  const registerAdmin = async (req, res) => {
 
@@ -93,83 +96,102 @@ import Course from "../models/courseModel.js";
 
 
 const addEducator = async (req, res) => {
-  try {
-    const {
-      name,
-      email,
-      password,
-      subject,
-      qualification,
-      experience,
-      about,
-    } = req.body;
+    try {
+        const { name, email, password, subject, qualification, experience, about } = req.body;
 
-   
-    if (!name || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Name, Email, and Password are required",
-      });
+     
+        if (!name || !email || !password) {
+            if (req.file) fs.unlinkSync(req.file.path); // Delete file if validation fails
+            return res.status(400).json({ success: false, message: "Required fields missing" });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: "Image is required" });
+        }
+
+      
+        const existingEducator = await educatorModel.findOne({ email });
+        if (existingEducator) {
+            fs.unlinkSync(req.file.path); 
+            return res.status(400).json({ success: false, message: "Educator already exists" });
+        }
+
+        const imageUpload = await cloudinary.uploader.upload(req.file.path, {
+            resource_type: "image",
+            folder: "educator_profiles" 
+        });
+
+      
+        fs.unlinkSync(req.file.path); 
+        
+        const imageUrl = imageUpload.secure_url;
+
+     
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const newEducator = new educatorModel({
+            name,
+            email,
+            password: hashedPassword,
+            image: imageUrl,
+            subject,
+            qualification,
+            experience,
+            about,
+        });
+
+        await newEducator.save();
+
+        res.status(201).json({
+            success: true,
+            message: "Educator added successfully",
+            educator: {
+                _id: newEducator._id,
+                name: newEducator.name,
+                email: newEducator.email,
+                image: newEducator.image,
+            },
+        });
+
+    } catch (error) {
+        
+        if (req.file) fs.unlinkSync(req.file.path);
+        
+        console.error("Add Educator Error:", error);
+        res.status(500).json({ success: false, message: error.message });
     }
-
-
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "Image is required",
-      });
-    }
-
-    const image = req.file.filename;
-
-    const existingEducator = await educatorModel.findOne({ email });
-
-    if (existingEducator) {
-      return res.status(400).json({
-        success: false,
-        message: "Educator already exists",
-      });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-   
-    const newEducator = new educatorModel({
-      name,
-      email,
-      password: hashedPassword,
-      image,
-      subject,
-      qualification,
-      experience,
-      about,
-    });
-
-    await newEducator.save();
-
-    res.status(201).json({
-      success: true,
-      message: "Educator added successfully",
-      educator: newEducator,
-    });
-
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
 };
 
- const getAllEducators = async (req, res) => {
+const getAllEducators = async (req, res) => {
     try {
         
-        const educators = await educatorModel.find({}).select('-password');
-        res.json({ success: true, educators });
+        const educators = await educatorModel.find({})
+            .select('-password')
+            .sort({ joinedAt: -1 }); 
+
+      
+        const formattedEducators = educators.map(educator => {
+            const eduObj = educator.toObject();
+           
+            if (!eduObj.image || !eduObj.image.startsWith('http')) {
+               
+            }
+            
+            return eduObj;
+        });
+
+        res.json({ 
+            success: true, 
+            educators: formattedEducators 
+        });
+
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        console.error("Get All Educators Error:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Failed to fetch educators" 
+        });
     }
 };
 
@@ -177,7 +199,7 @@ const updateEducator = async (req, res) => {
     try {
         const { userId, name, email, password, subject, qualification, experience, about } = req.body;
         
-      
+        
         const updateData = {
             name,
             email,
@@ -187,22 +209,37 @@ const updateEducator = async (req, res) => {
             about
         };
 
-       
-        if (req.file) {
-            updateData.image = req.file.filename;
-        }
-
-       
-        if (password && password.length > 0) {
+        
+        if (password && typeof password === 'string' && password.trim() !== "") {
             const salt = await bcrypt.genSalt(10);
             updateData.password = await bcrypt.hash(password, salt);
         }
 
+      
+        if (req.file) {
+            try {
+                const imageUpload = await cloudinary.uploader.upload(req.file.path, {
+                    resource_type: "image",
+                    folder: "educator_profiles"
+                });
+
+                updateData.image = imageUpload.secure_url;
+
+               
+                if (fs.existsSync(req.file.path)) {
+                    fs.unlinkSync(req.file.path);
+                }
+            } catch (uploadError) {
+                if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+                return res.status(500).json({ success: false, message: "Image upload to Cloudinary failed" });
+            }
+        }
+
         const updatedEducator = await educatorModel.findByIdAndUpdate(
             userId, 
-            updateData, 
-            { new: true } 
-        );
+            { $set: updateData }, 
+            { new: true, runValidators: true } 
+        ).select("-password"); 
 
         if (!updatedEducator) {
             return res.status(404).json({ success: false, message: "Educator not found" });
@@ -210,15 +247,20 @@ const updateEducator = async (req, res) => {
 
         res.json({ 
             success: true, 
-            message: "Educator updated successfully", 
+            message: "Educator profile and password updated successfully", 
             educator: updatedEducator 
         });
 
     } catch (error) {
-        console.log(error);
+        
+        if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+        console.error("Update Educator Error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
 const deleteEducator = async (req, res) => {
     try {
         const { userId } = req.body;
@@ -326,24 +368,27 @@ const deleteStudent = async (req, res) => {
   }
 };
 
- const getDashboardStats = async (req, res) => {
+const getDashboardStats = async (req, res) => {
   try {
-    
     const totalCourses = await Course.countDocuments();
     const totalStudents = await studentModel.countDocuments(); 
     const totalEducators = await educatorModel.countDocuments(); 
 
-   
     const courses = await Course.find({}, "coursePrice enrolledStudents discount");
     
     let totalRevenue = 0;
     courses.forEach((course) => {
-     
       const actualPrice = course.coursePrice - (course.coursePrice * (course.discount / 100));
       const studentsCount = course.enrolledStudents ? course.enrolledStudents.length : 0;
       
       totalRevenue += (actualPrice * studentsCount);
     });
+
+    const recentEnrollments = await Purchase.find({ status: "completed" }) 
+      .sort({ createdAt: -1 }) 
+      .populate('userId', 'name') 
+      
+      .populate('courseId', 'courseTitle'); 
 
     res.status(200).json({
       success: true,
@@ -352,6 +397,7 @@ const deleteStudent = async (req, res) => {
         totalStudents,
         totalEducators,
         totalRevenue,
+        recentEnrollments, 
       },
     });
   } catch (error) {

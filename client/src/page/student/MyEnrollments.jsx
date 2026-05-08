@@ -127,7 +127,7 @@ const MyEnrollments = () => {
           </tbody>
         </table>
       </div>
-      <Footer />
+     
     </>
   );
 };

@@ -20,7 +20,7 @@ connectDB();
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://lms-gu.vercel.app/",
+    "https://lms-gu.vercel.app",
     process.env.CLIENT_URL
   ],
   credentials: true,

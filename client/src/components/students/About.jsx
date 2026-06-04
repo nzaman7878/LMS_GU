@@ -4,27 +4,27 @@ const About = () => {
 
   const images = [
     {
-      src: "https://lh3.googleusercontent.com/gps-cs-s/APNQkAFyj4AMoofVbY1IT-2VkjY4er9VycFXuNtpZL6mN1Ign1VGWw0dbqEE-d_briYPC3Wca7nzjj1Omlor9BBkhpUPdOFHdYEeAprx1RSby0ZuBguXkJzA6MM8tRsSClojZc3ilqzi=s1360-w1360-h1020-rw",
+      src: "https://res.cloudinary.com/dhvrmmzux/image/upload/v1780604793/unnamed_yxopoj.webp",
       alt: "GU Main Featured",
       className: "md:col-span-2 md:row-span-2 h-64 md:h-full" // Large featured image
     },
     {
-      src: "https://lh3.googleusercontent.com/gps-cs-s/APNQkAFZCfLxH4VG4k5jEiJTwQE95X8qOne8sR8bgKM-aAjMG9Co1uC9gIOMm_3_GYXvJJkLiS8XYCJBI27ed26IY741UzaD9_a7Go0UBESDN0QxFh27TTF8gteJFfDJmQldm-I1ORaW5w=s1360-w1360-h1020-rw",
+      src: "https://res.cloudinary.com/dhvrmmzux/image/upload/v1780604802/unnamed_4_hmrmmm.webp",
       alt: "GU Campus",
       className: "col-span-1 h-40 md:h-56"
     },
     {
-      src: "https://lh3.googleusercontent.com/gps-cs-s/APNQkAEcy0sj8qzUL700fjKWEFhwpGljSJZv4Ma1vYaVGY4_qCIEd2A6qa0A5tTbLbHFc8NJZSbGwXIcIMUIbm7VrWBh8yWB0BkKk4wCfVP79VRP46mzaoU7-xmVLr-UOo6jO7q38B8=s1360-w1360-h1020-rw",
+      src: "https://res.cloudinary.com/dhvrmmzux/image/upload/v1780604792/unnamed_1_b1n4vw.webp",
       alt: "GU Academics",
       className: "col-span-1 h-40 md:h-56"
     },
     {
-      src: "https://lh3.googleusercontent.com/gps-cs-s/APNQkAFRyM1O8UI9ARnBrDOQxKsWAZlpbAgqAy-Sr-9OWMI5ONhK65PcTFPgFonybYtmjzan6aX22-JtUVCvgf5Rd-HsQFbSvpi1kEFu31Oqo8WpUjuzu-ScWEB1iaeoSemhWf_QqDrQ=s1360-w1360-h1020-rw",
+      src: "https://res.cloudinary.com/dhvrmmzux/image/upload/v1780604791/unnamed_8_vopt6q.webp",
       alt: "GU Library",
       className: "col-span-1 h-40 md:h-56"
     },
     {
-      src: "https://lh3.googleusercontent.com/gps-cs-s/APNQkAElmg1xM7-FWafttlkVPD3OX2yTXUe3UhyYL22tqmC8uJl42sfx38OloBOfNQrIXyzAPPohjL36q5f7FXB59ywpmmoJv1q-IBS9K3iX-JmiC4jIi-Lv863N36XOsGud5sCLPJ5bxVqvHUEP=s1360-w1360-h1020-rw",
+      src: "https://res.cloudinary.com/dhvrmmzux/image/upload/v1780604791/unnamed_6_wsoeym.webp",
       alt: "GU Students",
       className: "col-span-1 h-40 md:h-56"
     },

@@ -361,7 +361,7 @@ const CourseDetails = () => {
             </div>
           </div>
 
-          <div className="w-full lg:max-w-[400px] sticky top-24 z-10">
+          <div className="w-full lg:max-w-[400px] lg:sticky top-24 z-10">
             <div className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-200">
               <div className="relative w-full aspect-video bg-black">
                 {playerData ? (

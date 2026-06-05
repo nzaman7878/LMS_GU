@@ -14,7 +14,7 @@ const CourseCard = ({ course }) => {
   return (
    <Link
   to={"/courses/" + course._id}
-  onClick={() => window.scrollTo(0, 0)} 
+  onClick={() => window.scrollTo({ top: 80, behavior: "instant" })} 
   className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition duration-300"
 >
      

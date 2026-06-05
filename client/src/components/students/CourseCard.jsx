@@ -12,12 +12,11 @@ const CourseCard = ({ course }) => {
   ).toFixed(2);
 
   return (
-    <Link
-      to={"/courses/" + course._id}
-      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-      className="bg-white border border-gray-200 rounded-xl overflow-hidden 
-                 shadow-sm hover:shadow-lg transition duration-300"
-    >
+   <Link
+  to={"/courses/" + course._id}
+  onClick={() => window.scrollTo(0, 0)} 
+  className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition duration-300"
+>
      
       <div className="aspect-video overflow-hidden">
         <img

@@ -21,7 +21,7 @@ const Navbar = () => {
     navigate("/");
   };
 
-  // Added showInMobileNav property to control mobile visibility
+ 
   const navLinks = [
     { name: "Home", path: "/", showInMobileNav: true },
     {
@@ -50,7 +50,7 @@ const Navbar = () => {
           onClick={() => navigate("/")}
         />
 
-        {/* --- ADDED: Inline Mobile Links (Home, Courses, About) --- */}
+       
         <div className="flex md:hidden items-center gap-3 text-[13px] sm:text-sm font-medium text-gray-700">
           {navLinks
             .filter((link) => link.showInMobileNav)
@@ -67,7 +67,7 @@ const Navbar = () => {
             ))}
         </div>
 
-        {/* Desktop Links (Shows all) */}
+      
         <div className="hidden md:flex items-center gap-8 text-gray-700 font-medium">
           {navLinks.map((link) => (
             <Link
@@ -133,11 +133,11 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Hamburger Menu Dropdown */}
+   
       {menuOpen && (
         <div className="md:hidden bg-cyan-100/70 border-t border-gray-300 px-6 py-4 space-y-4 text-gray-700 font-medium">
           
-          {/* --- UPDATED: Show ONLY the links not visible inline --- */}
+          
           {navLinks
             .filter((link) => !link.showInMobileNav)
             .map((link) => (

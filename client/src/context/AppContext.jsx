@@ -102,7 +102,7 @@ const loginAdmin = async (email, password) => {
 
 const fetchStudentProfile = async (token) => {
   try {
-    const { data } = await axios.get(`${backendUrl}/api/students/profile`, { // Verify this URL!
+    const { data } = await axios.get(`${backendUrl}/api/students/profile`, { 
       headers: { Authorization: `Bearer ${token}` },
     });
 

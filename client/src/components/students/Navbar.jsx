@@ -11,26 +11,28 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
-  const adminToken = localStorage.getItem('adminToken');
+  const adminToken = localStorage.getItem("adminToken");
 
   const isCourseListPage = location.pathname === "/courses";
 
   const adminLogout = () => {
-    localStorage.removeItem('adminToken');
+    localStorage.removeItem("adminToken");
     toast.success("Admin Logged Out");
-    navigate('/');
+    navigate("/");
   };
 
+  // Added showInMobileNav property to control mobile visibility
   const navLinks = [
-    { name: "Home", path: "/" },
+    { name: "Home", path: "/", showInMobileNav: true },
     {
       name: student ? "My Courses" : "Courses",
       path: student ? "/my-enrollments" : "/course-list",
+      showInMobileNav: true,
     },
-    { name: "Interviews", path: "/interviews" }, // <-- Added Interviews Here
-    ...(student ? [{ name: "Dashboard", path: "/student/dashboard" }] : []),
-    { name: "About", path: "/about" },
-    { name: "Contact", path: "/contact" },
+    { name: "Interviews", path: "/interviews", showInMobileNav: false },
+    ...(student ? [{ name: "Dashboard", path: "/student/dashboard", showInMobileNav: false }] : []),
+    { name: "About", path: "/about", showInMobileNav: true },
+    { name: "Contact", path: "/contact", showInMobileNav: false },
   ];
 
   return (
@@ -48,6 +50,24 @@ const Navbar = () => {
           onClick={() => navigate("/")}
         />
 
+        {/* --- ADDED: Inline Mobile Links (Home, Courses, About) --- */}
+        <div className="flex md:hidden items-center gap-3 text-[13px] sm:text-sm font-medium text-gray-700">
+          {navLinks
+            .filter((link) => link.showInMobileNav)
+            .map((link) => (
+              <Link
+                key={link.name}
+                to={link.path}
+                className={`hover:text-blue-600 transition ${
+                  location.pathname === link.path ? "text-blue-600" : ""
+                }`}
+              >
+                {link.name}
+              </Link>
+            ))}
+        </div>
+
+        {/* Desktop Links (Shows all) */}
         <div className="hidden md:flex items-center gap-8 text-gray-700 font-medium">
           {navLinks.map((link) => (
             <Link
@@ -62,7 +82,7 @@ const Navbar = () => {
           ))}
         </div>
 
-        <div className="flex items-center gap-4 relative">
+        <div className="flex items-center gap-3 sm:gap-4 relative">
           
           {adminToken ? (
             <button
@@ -113,19 +133,23 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Hamburger Menu Dropdown */}
       {menuOpen && (
         <div className="md:hidden bg-cyan-100/70 border-t border-gray-300 px-6 py-4 space-y-4 text-gray-700 font-medium">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              to={link.path}
-              onClick={() => setMenuOpen(false)}
-              className="block hover:text-blue-600"
-            >
-              {link.name}
-            </Link>
-          ))}
+          
+          {/* --- UPDATED: Show ONLY the links not visible inline --- */}
+          {navLinks
+            .filter((link) => !link.showInMobileNav)
+            .map((link) => (
+              <Link
+                key={link.name}
+                to={link.path}
+                onClick={() => setMenuOpen(false)}
+                className="block hover:text-blue-600"
+              >
+                {link.name}
+              </Link>
+            ))}
 
           {adminToken ? (
              <button

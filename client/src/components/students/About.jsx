@@ -4,7 +4,7 @@ const About = () => {
 
   const images = [
     {
-      src: "https://res.cloudinary.com/dhvrmmzux/image/upload/v1780604793/unnamed_yxopoj.webp",
+      src: "https://res.cloudinary.com/dhvrmmzux/image/upload/v1780910981/unnamed_hoppyw.jpg",
       alt: "GU Main Featured",
       className: "md:col-span-2 md:row-span-2 h-64 md:h-full" // Large featured image
     },
@@ -19,7 +19,7 @@ const About = () => {
       className: "col-span-1 h-40 md:h-56"
     },
     {
-      src: "https://res.cloudinary.com/dhvrmmzux/image/upload/v1780604791/unnamed_8_vopt6q.webp",
+      src: "https://res.cloudinary.com/dhvrmmzux/image/upload/v1780910903/download_muau3q.jpg",
       alt: "GU Library",
       className: "col-span-1 h-40 md:h-56"
     },

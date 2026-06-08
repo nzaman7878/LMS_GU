@@ -7,6 +7,13 @@ const CoursesSection = () => {
 
   const { allCourses } = useContext(AppContext)
 
+
+  const latestCourses = allCourses 
+    ? [...allCourses]
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 4) 
+    : [];
+
   return (
     <div className="py-16 md:px-20 px-6 text-center">
 
@@ -22,7 +29,8 @@ const CoursesSection = () => {
 
       
       <div className="grid sm:grid-cols-auto lg:grid-cols-4 gap-6 mt-12">
-        {allCourses?.slice(0, 4).map((course) => (
+       
+        {latestCourses.map((course) => (
           <CourseCard key={course._id} course={course} />
         ))}
       </div>
@@ -33,8 +41,8 @@ const CoursesSection = () => {
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           to="/course-list"
           className="inline-block text-gray-700 border border-gray-300 
-                     px-8 py-3 rounded-lg hover:bg-gray-100 
-                     transition duration-300"
+                       px-8 py-3 rounded-lg hover:bg-gray-100 
+                       transition duration-300"
         >
           Show All Courses
         </Link>
